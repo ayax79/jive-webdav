@@ -16,6 +16,7 @@
 
     <groupId>com.syncapse.jive</groupId>
     <artifactId>jive-webdav</artifactId>
+    <name>jive-webdav</name>
     <version>1.0-SNAPSHOT</version>
     <description>Jive SBS implementation project. This is the parent pom</description>
     <packaging>pom</packaging>
