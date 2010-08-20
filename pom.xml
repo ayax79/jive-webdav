@@ -1,0 +1,216 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  This is the root pom file for a Jive SBS customization project. 
+
+  Each plugin in your project will be represented here as a module.  By default you get
+  a "web" module.  Although you can build all modules from the root of your customization project
+  most of the activity will take place in the sub-modules.  For example, you currently run 
+  your web app via Cargo from within your web/ module.
+
+  To change the Jive SBS version this customization project is attached to modify the clearspace.version 
+  property at the bottom of the file.
+-->
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <groupId>com.syncapse.jive</groupId>
+    <artifactId>jive-webdav</artifactId>
+    <version>1.0-SNAPSHOT</version>
+    <description>Jive SBS implementation project. This is the parent pom</description>
+    <packaging>pom</packaging>
+
+    <modules>
+        <module>web</module>
+	<module>webdav</module>
+    </modules>
+
+    <build>
+        <resources>
+            <resource>
+                <directory>src/main/resources</directory>
+                <filtering>true</filtering>
+            </resource>
+        </resources>
+        <plugins>
+            <plugin>
+                <artifactId>maven-antrun-plugin</artifactId>
+                <version>1.3</version>
+                <inherited>false</inherited>
+                <executions>
+		    <!-- 
+			 We're currently using Ant to build a jiveHome suitable for testing in the root project target directory: ./target/jiveHome
+			 You can rely on this to run your unit tests, or to test via Cargo.  When your webapp starts, point to this
+			 in the Admin Console.
+			 
+			 The jive.setup property (settable at the bottom of this pom.xml) gets filtered into the jive_startup.xml.  Use that
+			 to toggle whether you go into the startup configuration screens or not.  You can override this by setting it to false here
+			 or via the commandline, e.g. if you  want to change any system configurations, databses, jiveHome, etc.
+			 -->
+                    <execution>
+                        <id>package-clearspace-plugin</id>
+                        <phase>process-test-resources</phase>
+                        <goals>
+                            <goal>run</goal>
+                        </goals>
+                        <configuration>
+                            <tasks>
+                                <echo message="building jive home" />
+                                <mkdir dir="${project.build.directory}" />
+                                <mkdir dir="${project.build.directory}/jiveHome"/>
+                                <mkdir dir="${project.build.directory}/jiveHome/plugins"/>
+                                <mkdir dir="${project.build.directory}/jiveHome/themes"/>
+                                <filter token="jive.setup" value="${jive.setup}" />
+                                <copy todir="./target/jiveHome" overwrite="true" filtering="true">
+                                    <filterset>
+                                        <filter token="jive.setup" value="${jive.setup}"/>
+                                    </filterset>
+                                    <fileset dir="src/test/resources/jiveHome">
+                                        <include name="**/*.*" />
+                                    </fileset>
+                                </copy>
+                            </tasks>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+	    <!-- 
+		 The upgrade plugin generates diffs between custom overlayed files and the newest version, to ease upgrades. 
+
+		 We are hard at work upgrading this plugin to work for the general public.  Please be patient until it's done.
+		 -->
+            <plugin>
+                <groupId>com.jivesoftware.maven</groupId>
+                <artifactId>maven-upgrade-plugin</artifactId>
+                <version>1.0-SNAPSHOT</version>
+                <inherited>false</inherited>
+                <configuration>
+                    <currentVersion>${sbs.version}</currentVersion>
+                    <upgradeVersion>${upgrade.version}</upgradeVersion>
+                    <svnUser>${svn.username}</svnUser>
+                    <svnPassword>${svn.password}</svnPassword>
+                </configuration>
+            </plugin>            
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <configuration>
+                    <verbose>true</verbose>
+                    <fork>true</fork>
+                    <executable><!-- path-to-javac --></executable>
+                    <compilerVersion>1.6</compilerVersion>         <!-- compiling with JDK 6 now -->
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+
+    <dependencies>
+      <!-- Unit testing dependencies.  You unit test all your code, right? -->
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+            <version>4.4</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.objenesis</groupId>
+            <artifactId>objenesis</artifactId>
+            <version>1.0</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>cglib</groupId>
+            <artifactId>cglib</artifactId>
+            <version>2.1</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.jmock</groupId>
+            <artifactId>jmock-junit4</artifactId>
+            <version>2.4.0</version>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+
+
+    <!--
+	Modify these properties to conform to your own environment
+	-->
+    <properties>
+        <customer.name>jive-webdav</customer.name>
+        <customer.version>1.0-SNAPSHOT</customer.version>
+        <sbs.shortversion>4.5.1</sbs.shortversion>
+        <sbs.version>4.5.1</sbs.version>
+	<!-- This gets filtered into the setup param in your jive_init.xml Set to false if you want to enter setup screens-->
+        <jive.setup>true</jive.setup>
+        <cargo.wait>false</cargo.wait>
+         <java.compiler>${java.home}/bin/javac</java.compiler>
+    </properties>
+
+    <organization>
+        <name>Jive Software</name>
+        <url>http://jivesoftware.com</url>
+    </organization>
+
+    <!-- 
+	 For some nice reports run mvn site:site
+	 -->
+    <reporting>
+        <outputDirectory>target/site</outputDirectory>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-project-info-reports-plugin</artifactId>
+                <reportSets>
+                    <reportSet>
+                        <reports>
+                            <report>index</report>
+                            <report>plugins</report>
+                            <report>license</report>
+                            <report>project-team</report>
+                            <report>summary</report>
+                            <report>cim</report>
+                            <report>issue-tracking</report>
+                            <report>scm</report>
+                            <report>plugin-management</report>
+                            <report>mailing-list</report>
+                        </reports>
+                    </reportSet>
+                </reportSets>
+            </plugin>
+            <plugin>
+                <artifactId>maven-jxr-plugin</artifactId>
+            </plugin>
+            <plugin>
+                <artifactId>maven-javadoc-plugin</artifactId>
+            </plugin>
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>surefire-report-maven-plugin</artifactId>
+            </plugin>
+            <plugin>
+                <artifactId>maven-pmd-plugin</artifactId>
+                <configuration>
+                    <targetJdk>1.6</targetJdk>
+                </configuration>                
+            </plugin>
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>cobertura-maven-plugin</artifactId>
+                <version>2.0</version>
+            </plugin>
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>taglist-maven-plugin</artifactId>
+                <version>2.0-beta-1</version>
+                <configuration>
+                    <tags>TODO,@todo,FIXME,HACK,XXX,@deprecated</tags>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>jdepend-maven-plugin</artifactId>
+            </plugin>
+        </plugins>
+    </reporting>
+</project>

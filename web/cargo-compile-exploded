@@ -1,0 +1,9 @@
+# When running plugins invoke like so.  -DpluginDirs may be comma-delimited
+# Note: this command alone will not re-build your plugins, you have to do that manually.
+# Note: This command compiles java classes, copies resources (spring-etc.xml, theme, etc) and runs cargo with the
+#       exploded directory instead of the packaged war. This saves time during development.
+#
+# mvn compile war:exploded -DpluginDirs=/path/to/myplugin/target/myplugin -P dev cargo:start
+#
+
+mvn compile war:exploded -P dev cargo:start 

@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!--
+	This file stores all properties need by Jive SBS's startup process.
+	Property names must be in the format: "example.prop.is=value" That
+	will be stored as: 
+	<example> 
+		<prop> 
+			<is>value</is> 
+		</prop> 
+	</example>
+
+	All properties must be under the "jive" element. This file should live
+	in your jiveHome directory. The path to that directory should be
+	specified in your jive_init.xml file or by one of the other supported
+	mechanisms.
+-->
+	
+<!-- root element, all properties must be under this element -->
+
+<jive>
+	<!--  When setup is false, you can access the setup tool. -->
+	<setup>@jive.setup@</setup>
+	<!--  Database settings -->
+	<connectionProvider>
+		<className>com.jivesoftware.base.database.DefaultConnectionProvider
+		</className>
+	</connectionProvider>
+	<locale>
+		<characterEncoding>UTF-8</characterEncoding>
+	</locale>
+	<database>
+		<defaultProvider>
+			<username>postgres</username>
+			<serverURL>jdbc:postgresql://localhost:5432/jive-webdav-1.0-SNAPSHOT</serverURL>
+			<maxConnections>25</maxConnections>
+			<connectionTimeout>1.0</connectionTimeout>
+			<driver>org.postgresql.Driver</driver>
+			<password>postgres</password>
+			<minConnections>5</minConnections>
+		</defaultProvider>
+	</database>
+	<log>
+		<debug>
+			<enabled>true</enabled>
+		</debug>
+	</log>
+</jive>

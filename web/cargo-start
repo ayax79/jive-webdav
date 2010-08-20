@@ -1,0 +1,7 @@
+# When running plugins invoke like so.  -DpluginDirs may be comma-delimited
+# Note, this command alone will not re-build your plugins, you have to do that manually, but it will rebuild your war:
+#
+# mvn -Djive.devMode=true -DpluginDirs=/path/to/myplugin/target/myplugin -DskipTests=true -Dcargo.wait=true -P int integration-test
+#
+
+mvn -Djive.devMode=true -Dcargo.wait=true -P int cargo:start 
