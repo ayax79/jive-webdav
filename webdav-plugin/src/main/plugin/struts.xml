@@ -1,0 +1,10 @@
+<!DOCTYPE struts PUBLIC "-//Apache Software Foundation//DTD Struts Configuration 2.0//EN" "http://struts.apache.org/dtds/struts-2.0.dtd">
+<struts>
+
+    <!--<package name="facebook-actions-admin" extends="community-admin-default" namespace="/admin">-->
+        <!--<action name="external-apps" class="com.syncapse.externalplug.ExternalAppsAction">-->
+            <!--<result name="input" type="freemarker">/plugins/externalapp/resources/templates/admin/externalapps.ftl</result>-->
+        <!--</action>-->
+    <!--</package>-->
+
+</struts>

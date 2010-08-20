@@ -23,7 +23,7 @@
 
     <modules>
         <module>web</module>
-	<module>webdav</module>
+        <module>webdav-plugin</module>
     </modules>
 
     <build>
@@ -39,15 +39,15 @@
                 <version>1.3</version>
                 <inherited>false</inherited>
                 <executions>
-		    <!-- 
-			 We're currently using Ant to build a jiveHome suitable for testing in the root project target directory: ./target/jiveHome
-			 You can rely on this to run your unit tests, or to test via Cargo.  When your webapp starts, point to this
-			 in the Admin Console.
-			 
-			 The jive.setup property (settable at the bottom of this pom.xml) gets filtered into the jive_startup.xml.  Use that
-			 to toggle whether you go into the startup configuration screens or not.  You can override this by setting it to false here
-			 or via the commandline, e.g. if you  want to change any system configurations, databses, jiveHome, etc.
-			 -->
+                    <!--
+                  We're currently using Ant to build a jiveHome suitable for testing in the root project target directory: ./target/jiveHome
+                  You can rely on this to run your unit tests, or to test via Cargo.  When your webapp starts, point to this
+                  in the Admin Console.
+
+                  The jive.setup property (settable at the bottom of this pom.xml) gets filtered into the jive_startup.xml.  Use that
+                  to toggle whether you go into the startup configuration screens or not.  You can override this by setting it to false here
+                  or via the commandline, e.g. if you  want to change any system configurations, databses, jiveHome, etc.
+                  -->
                     <execution>
                         <id>package-clearspace-plugin</id>
                         <phase>process-test-resources</phase>
@@ -56,18 +56,18 @@
                         </goals>
                         <configuration>
                             <tasks>
-                                <echo message="building jive home" />
-                                <mkdir dir="${project.build.directory}" />
+                                <echo message="building jive home"/>
+                                <mkdir dir="${project.build.directory}"/>
                                 <mkdir dir="${project.build.directory}/jiveHome"/>
                                 <mkdir dir="${project.build.directory}/jiveHome/plugins"/>
                                 <mkdir dir="${project.build.directory}/jiveHome/themes"/>
-                                <filter token="jive.setup" value="${jive.setup}" />
+                                <filter token="jive.setup" value="${jive.setup}"/>
                                 <copy todir="./target/jiveHome" overwrite="true" filtering="true">
                                     <filterset>
                                         <filter token="jive.setup" value="${jive.setup}"/>
                                     </filterset>
                                     <fileset dir="src/test/resources/jiveHome">
-                                        <include name="**/*.*" />
+                                        <include name="**/*.*"/>
                                     </fileset>
                                 </copy>
                             </tasks>
@@ -75,11 +75,11 @@
                     </execution>
                 </executions>
             </plugin>
-	    <!-- 
-		 The upgrade plugin generates diffs between custom overlayed files and the newest version, to ease upgrades. 
+            <!--
+            The upgrade plugin generates diffs between custom overlayed files and the newest version, to ease upgrades.
 
-		 We are hard at work upgrading this plugin to work for the general public.  Please be patient until it's done.
-		 -->
+            We are hard at work upgrading this plugin to work for the general public.  Please be patient until it's done.
+            -->
             <plugin>
                 <groupId>com.jivesoftware.maven</groupId>
                 <artifactId>maven-upgrade-plugin</artifactId>
@@ -91,7 +91,7 @@
                     <svnUser>${svn.username}</svnUser>
                     <svnPassword>${svn.password}</svnPassword>
                 </configuration>
-            </plugin>            
+            </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
@@ -99,14 +99,15 @@
                     <verbose>true</verbose>
                     <fork>true</fork>
                     <executable><!-- path-to-javac --></executable>
-                    <compilerVersion>1.6</compilerVersion>         <!-- compiling with JDK 6 now -->
+                    <compilerVersion>1.6</compilerVersion>
+                    <!-- compiling with JDK 6 now -->
                 </configuration>
             </plugin>
         </plugins>
     </build>
 
     <dependencies>
-      <!-- Unit testing dependencies.  You unit test all your code, right? -->
+        <!-- Unit testing dependencies.  You unit test all your code, right? -->
         <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
@@ -142,10 +143,10 @@
         <customer.version>1.0-SNAPSHOT</customer.version>
         <sbs.shortversion>4.5.1</sbs.shortversion>
         <sbs.version>4.5.1</sbs.version>
-	<!-- This gets filtered into the setup param in your jive_init.xml Set to false if you want to enter setup screens-->
+        <!-- This gets filtered into the setup param in your jive_init.xml Set to false if you want to enter setup screens-->
         <jive.setup>true</jive.setup>
         <cargo.wait>false</cargo.wait>
-         <java.compiler>${java.home}/bin/javac</java.compiler>
+        <java.compiler>${java.home}/bin/javac</java.compiler>
     </properties>
 
     <organization>
@@ -193,7 +194,7 @@
                 <artifactId>maven-pmd-plugin</artifactId>
                 <configuration>
                     <targetJdk>1.6</targetJdk>
-                </configuration>                
+                </configuration>
             </plugin>
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>

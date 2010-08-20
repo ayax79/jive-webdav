@@ -1,0 +1,40 @@
+<plugin xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:noNamespaceSchemaLocation="http://www.jivesoftware.com/schemas/clearspace/1_1/plugin.xsd">
+    <name>webdav-plugin</name>
+    <description>Supports External Applications</description>
+    <author>syncapse</author>
+    <version>1.0.0</version>
+    <minServerVersion>4.0.5</minServerVersion>
+
+    <!--<databaseKey>externalapp</databaseKey>-->
+    <!--<databaseVersion>1</databaseVersion>-->
+
+    <!-- you will want to change your class name here! -->
+
+    <!-- The <components> element contains additions or customizations to
+	components in the user interface. Each <component> child element
+	represents a different UI piece, with its id attribute value
+	specifying which piece is being customized.
+
+	Here, you're customizing the user bar (the menu bar at the top of
+	each Clearspace page) so that its Browse menu gets a new entry
+	item, "Say Hello". The <url> element here specifies the URL that
+	Clearspace will load when the user clicks the item. In this
+	case, Clearspace will execute the sayhello action (which is defined
+	in the xwork-plugin.xml file).
+    -->
+
+    <!--<components>-->
+        <!--<component id="admin-console">-->
+            <!--<tab id="externalapp" name="admin.menu.externalapp" url="external-apps!input.jspa"-->
+                    <!--description="admin.section.externalapp.applist.desc" role="Manage System">-->
+                <!--<section id="section.externalapp" name="admin.section.externalapp.list" url="external-apps!input.jspa"-->
+                        <!--description="admin.section.externalapp.applist.desc">-->
+                    <!--<item id="externalapp-applist" name="admin.section.externalapp.list" url="external-apps!input.jspa"-->
+                            <!--description="admin.item.externalapp.applist.desc"/>-->
+                <!--</section>-->
+            <!--</tab>-->
+        <!--</component>-->
+    <!--</components>-->
+
+</plugin>
