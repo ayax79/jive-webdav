@@ -14,3 +14,4 @@ tmp/*
 logs/*
 web/target
 webdav-plugin/target
+webdav-servlet/target
