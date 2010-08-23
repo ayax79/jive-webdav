@@ -25,10 +25,10 @@ import net.sf.webdav.exceptions.WebdavException;
 
 /**
  * Servlet which provides support for WebDAV level 2.
- * 
+ * <p/>
  * the original class is org.apache.catalina.servlets.WebdavServlet by Remy
  * Maucherat, which was heavily changed
- * 
+ *
  * @author Remy Maucherat
  */
 
@@ -73,10 +73,10 @@ public class WebdavServlet extends WebDavServletBean {
                     clazzName);
 
             Constructor<?> ctor = clazz
-                    .getConstructor(new Class[] { File.class });
+                    .getConstructor(new Class[]{File.class});
 
             webdavStore = (IWebdavStore) ctor
-                    .newInstance(new Object[] { root });
+                    .newInstance(new Object[]{root});
         } catch (Exception e) {
             e.printStackTrace();
             throw new RuntimeException("some problem making store component", e);
@@ -87,8 +87,7 @@ public class WebdavServlet extends WebDavServletBean {
     private File getFileRoot() {
         String rootPath = getInitParameter(ROOTPATH_PARAMETER);
         if (rootPath == null) {
-            throw new WebdavException("missing parameter: "
-                    + ROOTPATH_PARAMETER);
+            throw new WebdavException("missing parameter: " + ROOTPATH_PARAMETER);
         }
         if (rootPath.equals("*WAR-FILE-ROOT*")) {
             String file = LocalFileSystemStore.class.getProtectionDomain()

@@ -14,11 +14,13 @@
     <packaging>war</packaging>
     <version>1.0-SNAPSHOT</version>
     <description>
-       Custom Jive SBS war. We try to only place files in this project that MUST be overlayed.
-       Usually this means there is no way to make the change as a plugin.  Most customizations can be done by plugin these days, and there
-       are many advantages to doing so in terms of packaging, deployment, upgradability and debugging. 
-       Overlaying a file ensures that you will have to put forth at least some development effort when you want to upgrade versions
-       of Jive SBS.  
+        Custom Jive SBS war. We try to only place files in this project that MUST be overlayed.
+        Usually this means there is no way to make the change as a plugin. Most customizations can be done by plugin
+        these days, and there
+        are many advantages to doing so in terms of packaging, deployment, upgradability and debugging.
+        Overlaying a file ensures that you will have to put forth at least some development effort when you want to
+        upgrade versions
+        of Jive SBS.
     </description>
 
     <parent>
@@ -39,21 +41,26 @@
                 <filtering>true</filtering>
             </resource>
         </resources>
+        <pluginManagement>
+            <plugins>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-compiler-plugin</artifactId>
+                    <configuration>
+                        <source>1.6</source>
+                        <!-- compiling with JDK 6 now -->
+                        <target>1.6</target>
+                    </configuration>
+                </plugin>
+            </plugins>
+        </pluginManagement>
         <plugins>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-compiler-plugin</artifactId>
-                <configuration>
-                    <source>1.6</source>    <!-- compiling with JDK 6 now -->
-                    <target>1.6</target>
-                </configuration>
-            </plugin>
             <plugin>
                 <artifactId>maven-antrun-plugin</artifactId>
                 <executions>
-		    <!-- If you are making use of the Cobertura reports, they generate a .ser file that must be deleted, or your 
-			 coverage data will be corrupted on successive runs
-		      -->
+                    <!-- If you are making use of the Cobertura reports, they generate a .ser file that must be deleted, or your
+                  coverage data will be corrupted on successive runs
+                   -->
                     <execution>
                         <id>delete-cobertura-ser</id>
                         <phase>clean</phase>
@@ -62,7 +69,7 @@
                         </goals>
                         <configuration>
                             <tasks>
-                                <echo message="deleting cobertura.ser" />
+                                <echo message="deleting cobertura.ser"/>
                                 <delete file="${basedir}/cobertura.ser" failonerror="false"/>
                             </tasks>
                         </configuration>
@@ -75,41 +82,41 @@
                         </goals>
                         <configuration>
                             <tasks>
-			        <!-- Copy themes files into ../target/jiveHome/themes for testing  -->
+                                <!-- Copy themes files into ../target/jiveHome/themes for testing  -->
                                 <copy todir="${basedir}/../target/jiveHome/themes" overwrite="true">
                                     <fileset dir="${basedir}/src/main/themes">
-                                        <include name="**/*" />
+                                        <include name="**/*"/>
                                     </fileset>
                                 </copy>
-				<!-- Now build a new themes.zip for distribution -->
+                                <!-- Now build a new themes.zip for distribution -->
                                 <mkdir dir="${project.build.directory}/themes"/>
                                 <copy todir="${project.build.directory}/themes" overwrite="yes" filtering="off">
                                     <fileset dir="${basedir}/src/main/themes"
-                                             includes="**/*" excludes="**/.svn, **/.svn/**" />
+                                             includes="**/*" excludes="**/.svn, **/.svn/**"/>
                                 </copy>
                                 <zip destfile="${project.build.directory}/themes.zip">
                                     <zipfileset dir="${project.build.directory}/themes" prefix=""/>
                                 </zip>
-				<!-- Copy your etc directory to ../target/jiveHome for testing-->
+                                <!-- Copy your etc directory to ../target/jiveHome for testing-->
                                 <mkdir dir="../target/jiveHome/etc"/>
                                 <copy todir="../target/jiveHome/etc" overwrite="true">
                                     <fileset dir="src/main/etc">
                                         <include name="*.xml"/>
                                     </fileset>
                                 </copy>
-				<!-- Build an etc.zip for distribution-->
+                                <!-- Build an etc.zip for distribution-->
                                 <zip destfile="${project.build.directory}/etc.zip">
                                     <zipfileset dir="${basedir}/src/main/etc" prefix=""/>
                                 </zip>
 
-				<!-- Copy your etc directory to ../target/jiveHome for testing-->
+                                <!-- Copy your etc directory to ../target/jiveHome for testing-->
                                 <mkdir dir="../target/jiveHome/keys"/>
                                 <copy todir="../target/jiveHome/keys" overwrite="true">
                                     <fileset dir="${basedir}/src/main/keys">
                                         <include name="*.der"/>
                                     </fileset>
                                 </copy>
-				<!-- Build an keys.zip for distribution-->
+                                <!-- Build an keys.zip for distribution-->
                                 <zip destfile="${project.build.directory}/keys.zip">
                                     <zipfileset dir="${basedir}/src/main/keys" prefix=""/>
                                 </zip>
@@ -117,52 +124,52 @@
                             </tasks>
                         </configuration>
                     </execution>
-                <!-- The execution below should be used when a project needs to overlay any Jive SBS bean.properties
-                     or resources in the Jive SBS directory "resources.scripts".  In order for these overlay files
-                     to actually override their equivalents in the Jive SBS jar, they need to be placed in the
-                     Jive SBS jar itself. -->                     
+                    <!-- The execution below should be used when a project needs to overlay any Jive SBS bean.properties
+                or resources in the Jive SBS directory "resources.scripts".  In order for these overlay files
+                to actually override their equivalents in the Jive SBS jar, they need to be placed in the
+                Jive SBS jar itself. -->
                     <!--<execution>-->
-                        <!--<id>repackage-sbs-jar</id>-->
-                        <!--<phase>package</phase>-->
-                        <!--<goals>-->
-                            <!--<goal>run</goal>-->
-                        <!--</goals>-->
-                        <!--<configuration>-->
-                            <!--<tasks>-->
-				 <!--Overlay items in the overlay directory into the jar distributed in the war -->
-                                <!--<unjar src="./target/${build.finalName}/WEB-INF/lib/jive-sbs-employee-${sbs.shortversion}.jar"-->
-                                        <!--dest="./target/jive-sbs-employee-temp-${sbs.shortversion}" />-->
-                                <!--<copy todir="./target/jive-sbs-employee-temp-${sbs.shortversion}" overwrite="true">-->
-                                    <!--<fileset dir="./src/main/overlay/" includes="**/*"/>-->
-                                <!--</copy>-->
-                                <!--<taskdef name="yui-compressor"-->
-                                         <!--classname="net.noha.tools.ant.yuicompressor.tasks.YuiCompressorTask"-->
-                                         <!--classpathref="maven.dependency.classpath"/>-->
+                    <!--<id>repackage-sbs-jar</id>-->
+                    <!--<phase>package</phase>-->
+                    <!--<goals>-->
+                    <!--<goal>run</goal>-->
+                    <!--</goals>-->
+                    <!--<configuration>-->
+                    <!--<tasks>-->
+                    <!--Overlay items in the overlay directory into the jar distributed in the war -->
+                    <!--<unjar src="./target/${build.finalName}/WEB-INF/lib/jive-sbs-employee-${sbs.shortversion}.jar"-->
+                    <!--dest="./target/jive-sbs-employee-temp-${sbs.shortversion}" />-->
+                    <!--<copy todir="./target/jive-sbs-employee-temp-${sbs.shortversion}" overwrite="true">-->
+                    <!--<fileset dir="./src/main/overlay/" includes="**/*"/>-->
+                    <!--</copy>-->
+                    <!--<taskdef name="yui-compressor"-->
+                    <!--classname="net.noha.tools.ant.yuicompressor.tasks.YuiCompressorTask"-->
+                    <!--classpathref="maven.dependency.classpath"/>-->
 
-                                <!--<yui-compressor-->
-                                    <!--warn="false"-->
-                                    <!--munge="true"-->
-                                    <!--preserveallsemicolons="false"-->
-                                    <!--todir="./target/jive-sbs-employee-temp-${sbs.shortversion}"-->
-                                    <!--fromdir="./src/main/overlay"-->
-                                    <!--charset="utf8">-->
-                                <!--</yui-compressor>-->
-                                <!--<jar jarfile="./target/${build.finalName}/WEB-INF/lib/jive-sbs-employee-${sbs.shortversion}.jar" update="false">-->
-                                    <!--<fileset dir="./target/jive-sbs-employee-temp-${sbs.shortversion}" includes="**/*"/>-->
-                                <!--</jar>-->
-                                <!--<jar destfile="./target/${build.finalName}.war">-->
-                                    <!--<fileset dir="./target/${build.finalName}"/>-->
-                                <!--</jar>-->
-                            <!--</tasks>-->
-                        <!--</configuration>-->
+                    <!--<yui-compressor-->
+                    <!--warn="false"-->
+                    <!--munge="true"-->
+                    <!--preserveallsemicolons="false"-->
+                    <!--todir="./target/jive-sbs-employee-temp-${sbs.shortversion}"-->
+                    <!--fromdir="./src/main/overlay"-->
+                    <!--charset="utf8">-->
+                    <!--</yui-compressor>-->
+                    <!--<jar jarfile="./target/${build.finalName}/WEB-INF/lib/jive-sbs-employee-${sbs.shortversion}.jar" update="false">-->
+                    <!--<fileset dir="./target/jive-sbs-employee-temp-${sbs.shortversion}" includes="**/*"/>-->
+                    <!--</jar>-->
+                    <!--<jar destfile="./target/${build.finalName}.war">-->
+                    <!--<fileset dir="./target/${build.finalName}"/>-->
+                    <!--</jar>-->
+                    <!--</tasks>-->
+                    <!--</configuration>-->
                     <!--</execution>-->
                 </executions>
             </plugin>
             <plugin>
-	       <!-- Surefire is our unit testing framework of choice-->
+                <!-- Surefire is our unit testing framework of choice-->
                 <artifactId>maven-surefire-plugin</artifactId>
                 <configuration>
-		    <!-- Don't suck up selenium tests in there-->
+                    <!-- Don't suck up selenium tests in there-->
                     <excludes>
                         <exclude>**/selenium/*Test.java</exclude>
                     </excludes>
@@ -183,39 +190,42 @@
          is copied into our war file at the root.  This gives you web-accessible, definitive build information -->
     <properties>
         <build.number>${env.BUILD_NUMBER}</build.number>
-                <build.vcs.number>${env.BUILD_VCS_NUMBER.1}</build.vcs.number>
-                <build.project.name>${env.TEAMCITY_PROJECT_NAME}</build.project.name>
+        <build.vcs.number>${env.BUILD_VCS_NUMBER.1}</build.vcs.number>
+        <build.project.name>${env.TEAMCITY_PROJECT_NAME}</build.project.name>
     </properties>
     <dependencies>
-    	<dependency>
-		  	<groupId>com.jivesoftware</groupId>
-		  	<artifactId>jive-sbs-employee</artifactId>     <!-- was clearspacex -->
-		  	<version>${sbs.version}</version>
-		  	<type>war</type>
-		</dependency>
-		
-		<dependency>
-		  	<groupId>com.jivesoftware</groupId>
-		  	<artifactId>jive-sbs-employee</artifactId>     <!-- was clearspacex -->
-		  	<version>${sbs.version}</version>
-		  	<type>jar</type>
-		  	<scope>provided</scope>
-		</dependency>
-		
-		<dependency>
-		  	<groupId>com.jivesoftware</groupId>
-		  	<artifactId>jive-sbs-employee-all</artifactId> <!-- was clearspacex-all -->
-		  	<version>${sbs.version}</version>
-		  	<type>pom</type>
-		  	<scope>provided</scope>
-		</dependency>
+        <dependency>
+            <groupId>com.jivesoftware</groupId>
+            <artifactId>jive-sbs-employee</artifactId>
+            <!-- was clearspacex -->
+            <version>${sbs.version}</version>
+            <type>war</type>
+        </dependency>
+
+        <dependency>
+            <groupId>com.jivesoftware</groupId>
+            <artifactId>jive-sbs-employee</artifactId>
+            <!-- was clearspacex -->
+            <version>${sbs.version}</version>
+            <type>jar</type>
+            <scope>provided</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>com.jivesoftware</groupId>
+            <artifactId>jive-sbs-employee-all</artifactId>
+            <!-- was clearspacex-all -->
+            <version>${sbs.version}</version>
+            <type>pom</type>
+            <scope>provided</scope>
+        </dependency>
         <dependency>
             <groupId>javax.servlet</groupId>
             <artifactId>servlet-api</artifactId>
             <version>2.4</version>
-            <scope>compile</scope>
+            <scope>provided</scope>
         </dependency>
-	<!-- We assume your jdbc jars will be provided at runtime-->
+        <!-- We assume your jdbc jars will be provided at runtime-->
         <dependency>
             <groupId>mysql</groupId>
             <artifactId>mysql-connector-java</artifactId>
@@ -238,14 +248,14 @@
              directory "resources.scripts".  In order for the minimized Javascript files to be generated, these
              dependencies must be present so the yui-compressor task can run -->
         <!--<dependency>-->
-          <!--<groupId>com.jivesoftware</groupId>-->
-          <!--<artifactId>yuicompressor</artifactId>-->
-          <!--<version>2.2.4_2_0_0_rc1</version>-->
+        <!--<groupId>com.jivesoftware</groupId>-->
+        <!--<artifactId>yuicompressor</artifactId>-->
+        <!--<version>2.2.4_2_0_0_rc1</version>-->
         <!--</dependency>-->
         <!--<dependency>-->
-          <!--<groupId>com.jivesoftware</groupId>-->
-          <!--<artifactId>yuicompressor-anttask</artifactId>-->
-          <!--<version>2.4.2</version>-->
+        <!--<groupId>com.jivesoftware</groupId>-->
+        <!--<artifactId>yuicompressor-anttask</artifactId>-->
+        <!--<version>2.4.2</version>-->
         <!--</dependency>-->
     </dependencies>
     <profiles>
@@ -253,14 +263,14 @@
             <id>int</id>
             <build>
                 <plugins>
-				    <!-- Cargo is our main method of running and testing/debugging SBS.  This is the main configuration area. -->
-				    <!-- Here is the config reference:  http://cargo.codehaus.org/Maven2+Plugin+Reference+Guide    -->
+                    <!-- Cargo is our main method of running and testing/debugging SBS.  This is the main configuration area. -->
+                    <!-- Here is the config reference:  http://cargo.codehaus.org/Maven2+Plugin+Reference+Guide    -->
                     <plugin>
                         <groupId>org.codehaus.cargo</groupId>
                         <artifactId>cargo-maven2-plugin</artifactId>
                         <version>1.0</version>
                         <configuration>
-			                <!-- Feed them this value; Decides if Cargo should wait after the container is started or not -->
+                            <!-- Feed them this value; Decides if Cargo should wait after the container is started or not -->
                             <wait>${cargo.wait}</wait>
                             <container>
                                 <containerId>tomcat6x</containerId>
@@ -273,7 +283,7 @@
                                     <!-- <pluginDirs>${basedir}/../myplugin/target/myplugin</pluginDirs> -->
                                 </systemProperties>
                                 <dependencies>
-				                    <!-- Throw in our most common jdbc connectors; add yours here if it's missing -->
+                                    <!-- Throw in our most common jdbc connectors; add yours here if it's missing -->
                                     <dependency>
                                         <groupId>mysql</groupId>
                                         <artifactId>mysql-connector-java</artifactId>
@@ -288,11 +298,15 @@
                             <configuration>
                                 <home>target/tomcat6x</home>
                                 <properties>
-                                    <cargo.jvmargs>-Xdebug -Xnoagent -Xrunjdwp:transport=dt_socket,address=8787,server=y,suspend=n -Xms512m -Xmx1024m -XX:MaxPermSize=256m -XX:+UseParNewGC -XX:+UseConcMarkSweepGC</cargo.jvmargs>
+                                    <cargo.jvmargs>-Xdebug -Xnoagent
+                                        -Xrunjdwp:transport=dt_socket,address=8787,server=y,suspend=n -Xms512m -Xmx1024m
+                                        -XX:MaxPermSize=256m -XX:+UseParNewGC -XX:+UseConcMarkSweepGC
+                                    </cargo.jvmargs>
                                 </properties>
                                 <deployables>
                                     <deployable>
-                                        <location>target/${customer.name}-${customer.version}-sbs-${sbs.version}.war</location>
+                                        <location>target/${customer.name}-${customer.version}-sbs-${sbs.version}.war
+                                        </location>
                                         <pingURL>http://localhost:8080/jive</pingURL>
                                         <properties>
                                             <context>jive</context>
@@ -318,8 +332,8 @@
                             </execution>
                         </executions>
                     </plugin>
-				    <!-- Selenium Server Plugin
-					     http://mojo.codehaus.org/selenium-maven-plugin/usage.html-->
+                    <!-- Selenium Server Plugin
+                              http://mojo.codehaus.org/selenium-maven-plugin/usage.html-->
                     <plugin>
                         <groupId>org.codehaus.mojo</groupId>
                         <artifactId>selenium-maven-plugin</artifactId>
@@ -344,8 +358,8 @@
                             </execution>
                         </executions>
                     </plugin>
-		            <!-- Surefire plugin for unit testing:
-			             http://maven.apache.org/plugins/maven-surefire-plugin/usage.html-->
+                    <!-- Surefire plugin for unit testing:
+                              http://maven.apache.org/plugins/maven-surefire-plugin/usage.html-->
                     <plugin>
                         <artifactId>maven-surefire-plugin</artifactId>
                         <executions>
@@ -371,8 +385,8 @@
             </build>
         </profile>
 
-    <!-- This profile creates a cargo configuration that runs Tomcat with the exploded war. Running with the exploded war reduces
-         the time that it takes for cargo to startup Tomcat. -->
+        <!-- This profile creates a cargo configuration that runs Tomcat with the exploded war. Running with the exploded war reduces
+the time that it takes for cargo to startup Tomcat. -->
         <profile>
             <id>dev</id>
             <build>
@@ -392,14 +406,14 @@
                             </execution>
                         </executions>
                     </plugin>
-		    <!-- Cargo is our main method of running and testing/debugging SBS.  This is the main configuration area. -->
-		    <!-- Here is the config reference:  http://cargo.codehaus.org/Maven2+Plugin+Reference+Guide    -->
+                    <!-- Cargo is our main method of running and testing/debugging SBS.  This is the main configuration area. -->
+                    <!-- Here is the config reference:  http://cargo.codehaus.org/Maven2+Plugin+Reference+Guide    -->
                     <plugin>
                         <groupId>org.codehaus.cargo</groupId>
                         <artifactId>cargo-maven2-plugin</artifactId>
                         <version>1.0</version>
                         <configuration>
-                    <!-- In the dev profile, cargo will always wait -->
+                            <!-- In the dev profile, cargo will always wait -->
                             <wait>true</wait>
                             <container>
                                 <containerId>tomcat6x</containerId>
@@ -414,7 +428,7 @@
                                     <!-- <pluginDirs>${basedir}/../myplugin/target/myplugin</pluginDirs> -->
                                 </systemProperties>
                                 <dependencies>
-				    <!-- Throw in our most common jdbc connectors; add yours here if it's missing -->
+                                    <!-- Throw in our most common jdbc connectors; add yours here if it's missing -->
                                     <dependency>
                                         <groupId>mysql</groupId>
                                         <artifactId>mysql-connector-java</artifactId>
@@ -429,12 +443,16 @@
                             <configuration>
                                 <home>target/tomcat6x</home>
                                 <properties>
-                                    <cargo.jvmargs>-noverify -javaagent:${rebel.path} -Xdebug -Xnoagent -Xrunjdwp:transport=dt_socket,address=8787,server=y,suspend=n -Xms1024m -Xmx2048m -XX:MaxPermSize=512m -XX:+UseParNewGC -XX:+UseConcMarkSweepGC</cargo.jvmargs>
+                                    <cargo.jvmargs>-noverify -javaagent:${rebel.path} -Xdebug -Xnoagent
+                                        -Xrunjdwp:transport=dt_socket,address=8787,server=y,suspend=n -Xms1024m
+                                        -Xmx2048m -XX:MaxPermSize=512m -XX:+UseParNewGC -XX:+UseConcMarkSweepGC
+                                    </cargo.jvmargs>
                                     <cargo.logging>low</cargo.logging>
                                 </properties>
                                 <deployables>
                                     <deployable>
-                                        <location>target/${customer.name}-${customer.version}-sbs-${sbs.version}</location>
+                                        <location>target/${customer.name}-${customer.version}-sbs-${sbs.version}
+                                        </location>
                                         <pingURL>http://localhost:8080/jive</pingURL>
                                         <properties>
                                             <context>jive</context>
@@ -473,7 +491,7 @@
                             </war>
                         </configuration>
                     </plugin> -->
-              </plugins>
+                </plugins>
             </build>
         </profile>
     </profiles>
