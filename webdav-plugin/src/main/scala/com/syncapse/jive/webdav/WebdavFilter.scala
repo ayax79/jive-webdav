@@ -4,7 +4,7 @@ import javax.servlet._
 import com.jivesoftware.community.{DocumentManager, CommunityManager}
 import reflect.BeanProperty
 import org.springframework.beans.factory.annotation.Required
-import net.sf.webdav.WebdavServlet
+import net.sf.webdav.{WebDavServletBean, WebdavServlet}
 
 /**
  * An acegi filter that wraps the WebdavServlet
@@ -23,10 +23,9 @@ class WebdavFilter extends Filter {
 
   var init = {
     val store = new JiveWebdavStore(communityManager, documentManager)
-    webdav = new WebdavServlet
-    webdav.init(webdav, )
+    webdav = new WebDavServletBean
+    webdav.init(webdav, null, null, 1, false)
   }
-
 
   def destroy = {}
 
