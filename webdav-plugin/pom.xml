@@ -22,7 +22,7 @@
 
     <build>
         <finalName>webdav-plugin-plugin-${sbs.version}-${version}</finalName>
-	<sourceDirectory>src/main/scala</sourceDirectory>
+	    <sourceDirectory>src/main/scala</sourceDirectory>
         <testSourceDirectory>src/test/scala</testSourceDirectory>
         <plugins>
 	   		<!-- For compilation-->
