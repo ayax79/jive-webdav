@@ -13,4 +13,4 @@ tmp/*
 .DS_Store
 logs/*
 web/target
-webdav/target
+webdav-plugin/target
