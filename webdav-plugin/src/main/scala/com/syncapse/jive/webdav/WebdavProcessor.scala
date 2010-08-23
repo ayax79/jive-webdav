@@ -10,7 +10,7 @@ object WebdavProcessor {
     wd
   }
 
-  def service(req: HttpServletRequest, resp: HttpServletResponse) = {
+  def process(req: HttpServletRequest, resp: HttpServletResponse) = {
     webdav.service(req, resp)
   }
 
