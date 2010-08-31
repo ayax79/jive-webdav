@@ -463,7 +463,7 @@ the time that it takes for cargo to startup Tomcat. -->
                             </configuration>
                         </configuration>
                     </plugin>
-                    <!-- <plugin>
+                    <plugin>
                         <groupId>org.zeroturnaround</groupId>
                         <artifactId>javarebel-maven-plugin</artifactId>
                         <executions>
@@ -480,10 +480,10 @@ the time that it takes for cargo to startup Tomcat. -->
                                 <fallback>default</fallback>
                                 <resources>
                                     <resource>
-                                        <directory>${basedir}/../myplugin/target/classes</directory>
+                                        <directory>${basedir}/../webdav-plugin/target/classes</directory>
                                     </resource>
                                     <resource>
-                                         <jarset>${basedir}/../myplugin/target/dependency</jarset>
+                                         <jarset>${basedir}/../webdav-plugin/target/dependency</jarset>
                                     </resource>
                                 </resources>
                             </classpath>
@@ -491,7 +491,7 @@ the time that it takes for cargo to startup Tomcat. -->
                                 <path>${basedir}/target/${customer.name}-${customer.version}-sbs-${sbs.version}</path>
                             </war>
                         </configuration>
-                    </plugin> -->
+                    </plugin>
                 </plugins>
             </build>
         </profile>
