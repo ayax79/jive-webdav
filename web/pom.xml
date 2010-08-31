@@ -426,6 +426,7 @@ the time that it takes for cargo to startup Tomcat. -->
                                     <docverse.enabled>false</docverse.enabled>
                                     <rebel.struts2-plugin>true</rebel.struts2-plugin>
                                     <!-- <pluginDirs>${basedir}/../myplugin/target/myplugin</pluginDirs> -->
+                                    <pluginDirs>${basedir}/../webdav-plugin/target/webdav-plugin-4.5.1-1.0</pluginDirs>
                                 </systemProperties>
                                 <dependencies>
                                     <!-- Throw in our most common jdbc connectors; add yours here if it's missing -->
