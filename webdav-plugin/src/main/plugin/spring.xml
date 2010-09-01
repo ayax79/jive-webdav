@@ -10,9 +10,9 @@
     <bean class="com.syncapse.jive.webdav.ScalaPlugin">
     </bean>
 
-    <bean id="webdavFilter" class="com.syncapse.jive.webdav.WebdavFilter">
-        <property name="communityManager" ref="communityManager" />
-        <property name="documentManager" ref="documentManager" />
+    <bean id="webdavFilter" class="com.syncapse.jive.webdav.WebdavFilter" init-method="init">
+        <property name="communityManager" ref="communityManagerImpl" />
+        <property name="documentManager" ref="documentManagerImpl" />
     </bean>
 
     <bean id="filterChainProxy" class="org.acegisecurity.util.FilterChainProxy">

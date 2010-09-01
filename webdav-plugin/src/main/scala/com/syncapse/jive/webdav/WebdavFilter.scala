@@ -22,8 +22,11 @@ class WebdavFilter extends Filter with Loggable {
 
   protected var webdav: WebDavServletBean = null
 
-  var init = {
+  def init = {
     logger.info("WebdavFilter init called")
+    if (communityManager == null | documentManager == null) {
+      throw new IllegalStateException("managers are required!")
+    }
     val store = new JiveWebdavStore(communityManager, documentManager)
     webdav = new WebDavServletBean
     webdav.init(store, null, null, 1, false)
