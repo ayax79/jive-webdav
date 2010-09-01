@@ -6,11 +6,13 @@ import reflect.BeanProperty
 import org.springframework.beans.factory.annotation.Required
 import net.sf.webdav.{WebDavServletBean, WebdavServlet}
 import com.syncapse.jive.Loggable
+import org.springframework.context.{ApplicationContext, ApplicationContextAware}
+import org.springframework.web.context.WebApplicationContext
 
 /**
  * An acegi filter that wraps the WebdavServlet
  */
-class WebdavFilter extends Filter with Loggable {
+class WebdavFilter extends Filter with Loggable with ApplicationContextAware {
 
   @BeanProperty
   @Required
@@ -20,6 +22,9 @@ class WebdavFilter extends Filter with Loggable {
   @Required
   var documentManager: DocumentManager = null
 
+  @BeanProperty
+  var applicationContext: ApplicationContext = null
+
   protected var webdav: WebDavServletBean = null
 
   def init = {
@@ -28,7 +33,12 @@ class WebdavFilter extends Filter with Loggable {
       throw new IllegalStateException("managers are required!")
     }
     val store = new JiveWebdavStore(communityManager, documentManager)
-    webdav = new WebDavServletBean
+    webdav = new WebDavServletBean {
+      // The webdav servlet needs access to the servlet context
+      override def getServletContext = {
+        applicationContext.asInstanceOf[WebApplicationContext].getServletContext
+      }
+    }
     webdav.init(store, null, null, 1, false)
   }
 
