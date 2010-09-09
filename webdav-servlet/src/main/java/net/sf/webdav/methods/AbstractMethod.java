@@ -128,10 +128,14 @@ public abstract class AbstractMethod implements IMethodExecutor {
         }
 
         // No, extract the desired path directly from the request
-        String result = request.getPathInfo();
+        //String result = request.getPathInfo();
         // if (result == null) {
         // result = request.getServletPath();
         // }
+
+        // hack for plugin
+        String result = request.getServletPath().replaceFirst("/webdav", "");
+        
         if ((result == null) || (result.equals(""))) {
             result = "/";
         }

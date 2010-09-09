@@ -107,7 +107,7 @@ public class WebDavServletBean extends HttpServlet {
         ITransaction transaction = null;
         boolean needRollback = false;
 
-        if (LOG.isTraceEnabled())
+        if (LOG.isInfoEnabled())
             debugRequest(methodName, req);
 
         try {
@@ -160,25 +160,25 @@ public class WebDavServletBean extends HttpServlet {
     }
 
     private void debugRequest(String methodName, HttpServletRequest req) {
-        LOG.trace("-----------");
-        LOG.trace("WebdavServlet\n request: methodName = " + methodName);
-        LOG.trace("time: " + System.currentTimeMillis());
-        LOG.trace("path: " + req.getRequestURI());
-        LOG.trace("-----------");
+        LOG.info("-----------");
+        LOG.info("WebdavServlet\n request: methodName = " + methodName);
+        LOG.info("time: " + System.currentTimeMillis());
+        LOG.info("path: " + req.getRequestURI());
+        LOG.info("-----------");
         Enumeration<?> e = req.getHeaderNames();
         while (e.hasMoreElements()) {
             String s = (String) e.nextElement();
-            LOG.trace("header: " + s + " " + req.getHeader(s));
+            LOG.info("header: " + s + " " + req.getHeader(s));
         }
         e = req.getAttributeNames();
         while (e.hasMoreElements()) {
             String s = (String) e.nextElement();
-            LOG.trace("attribute: " + s + " " + req.getAttribute(s));
+            LOG.info("attribute: " + s + " " + req.getAttribute(s));
         }
         e = req.getParameterNames();
         while (e.hasMoreElements()) {
             String s = (String) e.nextElement();
-            LOG.trace("parameter: " + s + " " + req.getParameter(s));
+            LOG.info("parameter: " + s + " " + req.getParameter(s));
         }
     }
 

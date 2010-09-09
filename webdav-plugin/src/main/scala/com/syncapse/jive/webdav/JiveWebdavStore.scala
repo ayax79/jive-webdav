@@ -9,6 +9,8 @@ import java.util.Date
 import scala.collection.JavaConversions
 import com.jivesoftware.community._
 import java.net.URLEncoder
+import javax.ws.rs.core.SecurityContext
+import org.springframework.security.context.SecurityContextHolder
 
 class JiveWebdavStore(jiveContext: JiveContext) extends IWebdavStore with Loggable {
   lazy val CommunitiesRE = """\/communities\/([^\s]*)$""".r
@@ -17,19 +19,19 @@ class JiveWebdavStore(jiveContext: JiveContext) extends IWebdavStore with Loggab
   lazy val communityManager = jiveContext.getCommunityManager
 
   def getStoredObject(transaction: ITransaction, uri: String) = {
-    logger.info("JiveWebStore getStoredObject: " + uri)
-    uri match {
+    val so = uri match {
       case "/" => RootStoredObject.asInstanceOf[StoredObject]
       case "/communities" => JiveWebdavUtils.buildStoredObject(rootCommunity)
       case "/spaces" => RootStoredObject.asInstanceOf[StoredObject]
       case CommunitiesRE(rest) =>
-        val tokens: Array[String] = rest.split("/")
-        findCommunityUri(tokens.toList, rootCommunity) match {
+        findCommunityUri(tokens(rest), rootCommunity) match {
           case None => null
           case Some(x) => JiveWebdavUtils.buildStoredObject(x)
         }
-      case _ => null
+      case _ => RootStoredObject.asInstanceOf[StoredObject] // just put something so we don't get an NPE
     }
+    logger.info("JiveWebStore getStoredObject: " + uri + " storedObject: " + printSo(so))
+    so
   }
 
   def removeObject(transaction: ITransaction, uri: String) = {
@@ -43,7 +45,6 @@ class JiveWebdavStore(jiveContext: JiveContext) extends IWebdavStore with Loggab
   }
 
   def getChildrenNames(transaction: ITransaction, folderUri: String) = {
-    logger.info("JiveWebStore getChildrenNames: " + folderUri)
     def communityNames(community: Community) = {
       val communities: Iterable[Community] = JavaConversions.asIterable(communityManager.getCommunities(community))
       communities.map(c => c.getName).toArray[String]
@@ -54,15 +55,25 @@ class JiveWebdavStore(jiveContext: JiveContext) extends IWebdavStore with Loggab
       docs.map(d => encodedSubject(d)).toArray[String]
     }
 
-    folderUri match {
+    val children = folderUri match {
       case "/" => Array[String]("communities", "spaces")
-      case "/communities" => communityNames(rootCommunity.jiveObject) ++ documentNames(rootCommunity.jiveObject)
-      case _ => matchingCommunity(folderUri) match {
-        case Some(x) => communityNames(x.jiveObject)
-        case None => Array[String]()
-      }
+      case "/communities" =>
+        communityNames(rootCommunity.jiveObject) ++ documentNames(rootCommunity.jiveObject)
+      case CommunitiesRE(rest) =>
+        findCommunityUri(tokens(rest), rootCommunity) match {
+          case Some(x) =>
+            x match {
+              case CommunityCase(c) => communityNames(c)
+              case DocumentCase(d) => Array[String]() // shouldn't happen
+            }
+          case None => Array[String]()
+        }
+      case _ => Array[String]() 
     }
+    logger.info("JiveWebStore getChildrenNames: " + folderUri + " children: " + printList(children.toList))
+    children
   }
+
 
   def setResourceContent(transaction: ITransaction, resourceUri: String, content: InputStream, contentType: String, characterEncoding: String) = {
     logger.info("JiveWebStore setResourceContent: " + resourceUri)
@@ -97,15 +108,18 @@ class JiveWebdavStore(jiveContext: JiveContext) extends IWebdavStore with Loggab
   }
 
   def begin(principal: Principal) = {
-    logger.info("begin called")
-    null
+    logger.info("begin called principal: " + principal)
+    new ITransaction {
+      def getPrincipal = principal
+    }
   }
 
   protected def rootCommunity = CommunityCase(communityManager.getRootCommunity)
 
-  protected def matchingCommunity(name: String): Option[CommunityCase] = {
+  protected def matchingCommunity(c: Community, name: String): Option[CommunityCase] = {
+    logger.info("matchingCommunity c: "+c.getName + " name: " + name)
     // todo, caching or something more efficient here
-    val communities: Iterable[Community] = JavaConversions.asIterable(communityManager.getRecursiveCommunities(rootCommunity.jiveObject))
+    val communities: Iterable[Community] = JavaConversions.asIterable(communityManager.getCommunities(c))
     communities.find(c => c.getName == name) match {
       case Some(x) => Some(CommunityCase(x))
       case None => None
@@ -120,18 +134,19 @@ class JiveWebdavStore(jiveContext: JiveContext) extends IWebdavStore with Loggab
       // must just be a community, return the community
         case Nil => Some(j)
         case head :: tail =>
-          matchingCommunity(head) match {
+          matchingCommunity(c, head) match {
             case None =>
               documentFromCommunity(head, c) match {
                 case None => None
-                case Some(d) => findCommunityUri(tokens, d)
+                case Some(d) => findCommunityUri(tail, d)
               }
-            case Some(c) => findCommunityUri(tokens, c)
+            case Some(c) => findCommunityUri(tail, c)
           }
       }
   }
 
   protected def documentFromCommunity(s: String, c: Community): Option[DocumentCase] = {
+    logger.info("documentFromCommunity s: " + s + " c: " + c)
     val docs: Iterable[Document] = JavaConversions.asIterable(documentManager.getDocuments(c))
     docs.find(d => encodedSubject(d) == s) match {
       case None => None
@@ -147,6 +162,15 @@ class JiveWebdavStore(jiveContext: JiveContext) extends IWebdavStore with Loggab
     setCreationDate(new Date(0))
   }
 
-  
+  protected def printSo(so: StoredObject) = if (so != null) {
+    "folder: " + so.isFolder + ",creationDate" + so.getCreationDate + ",lastModified: " + so.getLastModified
+  } else {""}
+
+  protected def printList(list: List[String]) = list match {
+    case Nil => ""
+    case _ => "[" + list.reduceLeft(_ + ", " + _) + "]"
+  }
+
+  protected def tokens(uri: String) = uri.split("/").toList
 
 }

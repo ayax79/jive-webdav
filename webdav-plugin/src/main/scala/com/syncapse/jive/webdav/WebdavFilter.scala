@@ -1,12 +1,12 @@
 package com.syncapse.jive.webdav
 
 import javax.servlet._
+import http.HttpServletRequest
 import reflect.BeanProperty
 import net.sf.webdav.WebDavServletBean
 import com.syncapse.jive.Loggable
 import org.springframework.context.{ApplicationContext, ApplicationContextAware}
 import org.springframework.web.context.WebApplicationContext
-import com.jivesoftware.community.lifecycle.JiveApplication
 import com.jivesoftware.community.lifecycle.spring.SpringJiveContextImpl
 
 /**
@@ -36,7 +36,7 @@ class WebdavFilter extends Filter with Loggable with ApplicationContextAware {
   }
 
   def doFilter(request: ServletRequest, response: ServletResponse, chain: FilterChain) = {
-    logger.info("WebdavFilter init called")
+    logger.info("WebdavFilter doFilter called path: " + request.asInstanceOf[HttpServletRequest].getRequestURI)
     webdav.service(request, response)
   }
 

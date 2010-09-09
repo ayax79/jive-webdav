@@ -270,4 +270,4 @@ public class WebdavStatus {
         _mapStatusCodes.put(new Integer(nKey), strVal);
     }
 
-};
+}
