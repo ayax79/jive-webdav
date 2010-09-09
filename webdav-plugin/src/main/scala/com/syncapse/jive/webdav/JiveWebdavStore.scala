@@ -25,7 +25,7 @@ class JiveWebdavStore(jiveContext: JiveContext) extends IWebdavStore with Loggab
       case "/spaces" => RootStoredObject.asInstanceOf[StoredObject]
       case CommunitiesRE(rest) =>
         findCommunityUri(tokens(rest), rootCommunity) match {
-          case None => null
+          case None => RootStoredObject.asInstanceOf[StoredObject]
           case Some(x) => JiveWebdavUtils.buildStoredObject(x)
         }
       case _ => RootStoredObject.asInstanceOf[StoredObject] // just put something so we don't get an NPE
@@ -63,12 +63,12 @@ class JiveWebdavStore(jiveContext: JiveContext) extends IWebdavStore with Loggab
         findCommunityUri(tokens(rest), rootCommunity) match {
           case Some(x) =>
             x match {
-              case CommunityCase(c) => communityNames(c)
-              case DocumentCase(d) => Array[String]() // shouldn't happen
+              case CommunityCase(c) => communityNames(c) ++ documentNames(c)
+              case _ => Array[String]() // either a document or None was returned
             }
-          case None => Array[String]()
+          case _ => Array[String]()
         }
-      case _ => Array[String]() 
+      case _ => Array[String]() // todo, sometime i want to test to see if the _ matches above will fall to this if not specified.
     }
     logger.info("JiveWebStore getChildrenNames: " + folderUri + " children: " + printList(children.toList))
     children
@@ -117,7 +117,7 @@ class JiveWebdavStore(jiveContext: JiveContext) extends IWebdavStore with Loggab
   protected def rootCommunity = CommunityCase(communityManager.getRootCommunity)
 
   protected def matchingCommunity(c: Community, name: String): Option[CommunityCase] = {
-    logger.info("matchingCommunity c: "+c.getName + " name: " + name)
+    logger.info("matchingCommunity c: " + c.getName + " name: " + name)
     // todo, caching or something more efficient here
     val communities: Iterable[Community] = JavaConversions.asIterable(communityManager.getCommunities(c))
     communities.find(c => c.getName == name) match {
@@ -131,17 +131,26 @@ class JiveWebdavStore(jiveContext: JiveContext) extends IWebdavStore with Loggab
     case DocumentCase(d) => Some(DocumentCase(d))
     case CommunityCase(c) =>
       tokens match {
-      // must just be a community, return the community
-        case Nil => Some(j)
+        case Nil => None // couldn't find a match
         case head :: tail =>
-          matchingCommunity(c, head) match {
-            case None =>
-              documentFromCommunity(head, c) match {
-                case None => None
-                case Some(d) => findCommunityUri(tail, d)
+          head match {
+            // handle the odd case where there may be no entry
+            case "" =>
+              tail match {
+                case Nil => None
+                case _ => findCommunityUri(tail, j)
               }
-            case Some(c) => findCommunityUri(tail, c)
+            case _ =>
+              matchingCommunity(c, head) match {
+                case None =>
+                  documentFromCommunity(head, c) match {
+                    case None => None
+                    case Some(d) => findCommunityUri(tail, d)
+                  }
+                case Some(c) => findCommunityUri(tail, c)
+              }
           }
+
       }
   }
 
