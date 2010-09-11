@@ -9,9 +9,11 @@ case class SocialGroupCase(jiveObject: SocialGroupCase) extends JiveCaseClass
 case class DocumentCase(jiveObject: Document) extends JiveCaseClass
 
 object JiveWebdavUtils {
-  def buildStoredObject(jo: JiveCaseClass) = jo match {
-    case CommunityCase(c) => buildStoredObjectFromContainer(c.asInstanceOf[JiveContainer]);
-    case SocialGroupCase(c) => buildStoredObjectFromContainer(c.asInstanceOf[JiveContainer]);
+  def buildStoredObject(jo: JiveCaseClass) : StoredObject = jo match {
+    case CommunityCase(c) => buildStoredObjectFromContainer(c.asInstanceOf[JiveContainer])
+    case SocialGroupCase(c) => buildStoredObjectFromContainer(c.asInstanceOf[JiveContainer])
+    case DocumentCase(d) => buildContentObject(d)
+    case _ => throw new IllegalStateException("Case class not handled "+jo)
   }
 
   protected def buildStoredObjectFromContainer(jc: JiveContainer): StoredObject = {

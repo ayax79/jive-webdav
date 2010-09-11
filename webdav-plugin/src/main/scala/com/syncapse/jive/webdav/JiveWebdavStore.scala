@@ -1,16 +1,17 @@
 package com.syncapse.jive.webdav
 
 import java.security.Principal
-import java.io.InputStream
 import java.lang.String
 import com.syncapse.jive.Loggable
 import net.sf.webdav.{StoredObject, ITransaction, IWebdavStore}
 import java.util.Date
 import scala.collection.JavaConversions
 import com.jivesoftware.community._
+import action.util.RenderUtils
 import java.net.URLEncoder
 import javax.ws.rs.core.SecurityContext
 import org.springframework.security.context.SecurityContextHolder
+import java.io.{ByteArrayInputStream, InputStream}
 
 class JiveWebdavStore(jiveContext: JiveContext) extends IWebdavStore with Loggable {
   lazy val CommunitiesRE = """\/communities\/([^\s]*)$""".r
@@ -91,9 +92,24 @@ class JiveWebdavStore(jiveContext: JiveContext) extends IWebdavStore with Loggab
     0L
   }
 
-  def getResourceContent(transaction: ITransaction, resourceUri: String) = {
-    logger.info("JiveWebStore getResourceContent: " + resourceUri)
-    null
+  def getResourceContent(transaction: ITransaction, resourceUri: String) = resourceUri match {
+    case "/" | IgnoredRE | "/communities" | "/spaces" => null
+    case CommunitiesRE(rest) =>
+      findCommunityUri(tokens(rest), rootCommunity) match {
+        case Some(x) =>
+          x match {
+            case DocumentCase(d) =>
+              d.isTextBody match {
+                case true =>
+                  new ByteArrayInputStream(RenderUtils.renderToHtml(d, jiveContext.getRenderManager).getBytes("utf-8"))
+                case false =>
+                  d.getBinaryBody.getData
+              }
+            case _ => null
+          }
+        case _ => null
+      }
+    case _ => null
   }
 
   def createResource(transaction: ITransaction, resourceUri: String) = {
@@ -125,9 +141,9 @@ class JiveWebdavStore(jiveContext: JiveContext) extends IWebdavStore with Loggab
     }
   }
 
-  protected def rootCommunity = CommunityCase(communityManager.getRootCommunity)
+  def rootCommunity = CommunityCase(communityManager.getRootCommunity)
 
-  protected def matchingCommunity(c: Community, name: String): Option[CommunityCase] = {
+  def matchingCommunity(c: Community, name: String): Option[CommunityCase] = {
     logger.info("matchingCommunity c: " + c.getName + " name: " + name)
     // todo, caching or something more efficient here
     val communities: Iterable[Community] = JavaConversions.asIterable(communityManager.getCommunities(c))
@@ -181,29 +197,29 @@ class JiveWebdavStore(jiveContext: JiveContext) extends IWebdavStore with Loggab
 
   def encodedSubject(d: Document) = URLEncoder.encode(d.getSubject, "utf-8")
 
-  protected object RootStoredObject extends StoredObject {
+  object RootStoredObject extends StoredObject {
     setFolder(true)
     setLastModified(new Date(0))
     setCreationDate(new Date(0))
   }
 
-  protected def printSo(so: StoredObject) = if (so != null) {
+  def printSo(so: StoredObject) = if (so != null) {
     "folder: " + so.isFolder + ",creationDate" + so.getCreationDate + ",lastModified: " + so.getLastModified
   } else {""}
 
 
-  protected def printList(list: Array[String]): String = list match {
+  def printList(list: Array[String]): String = list match {
     case null => null
     case _ => printList(list.toList)
   }
 
-  protected def printList(list: List[String]): String = list match {
+  def printList(list: List[String]): String = list match {
     case Nil => ""
     case _ =>
       "[" + list.reduceLeft(_ + ", " + _) + "]"
   }
 
-  protected def tokens(uri: String) = {
+  def tokens(uri: String) = {
     val list: List[String] = uri.split("/").toList
     list.filter {case "" => false; case _ => true}
   }
