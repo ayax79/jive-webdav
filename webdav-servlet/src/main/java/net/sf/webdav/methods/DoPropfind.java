@@ -252,6 +252,7 @@ public class DoPropfind extends AbstractMethod {
             throws WebdavException {
 
         StoredObject so = _store.getStoredObject(transaction, path);
+        if (so == null) return;
 
         boolean isFolder = so.isFolder();
         String creationdate = CREATION_DATE_FORMAT.format(so.getCreationDate());

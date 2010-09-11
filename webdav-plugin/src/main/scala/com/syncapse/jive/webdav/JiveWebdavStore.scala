@@ -15,6 +15,8 @@ import org.springframework.security.context.SecurityContextHolder
 class JiveWebdavStore(jiveContext: JiveContext) extends IWebdavStore with Loggable {
   lazy val CommunitiesRE = """\/communities\/([^\s]*)$""".r
   lazy val SpacesRE = """\/spaces\/([^\s])*$""".r
+  lazy val IgnoredRE = """(\.DS\_Store|\.\_)""".r // hacks for some files on mac os x we should ignore.
+
   lazy val documentManager = jiveContext.getDocumentManager
   lazy val communityManager = jiveContext.getCommunityManager
 
@@ -23,12 +25,13 @@ class JiveWebdavStore(jiveContext: JiveContext) extends IWebdavStore with Loggab
       case "/" => RootStoredObject.asInstanceOf[StoredObject]
       case "/communities" => JiveWebdavUtils.buildStoredObject(rootCommunity)
       case "/spaces" => RootStoredObject.asInstanceOf[StoredObject]
+      case IgnoredRE => null
       case CommunitiesRE(rest) =>
         findCommunityUri(tokens(rest), rootCommunity) match {
-          case None => RootStoredObject.asInstanceOf[StoredObject]
+          case None => null
           case Some(x) => JiveWebdavUtils.buildStoredObject(x)
         }
-      case _ => RootStoredObject.asInstanceOf[StoredObject] // just put something so we don't get an NPE
+      case _ => null // just put something so we don't get an NPE
     }
     logger.info("JiveWebStore getStoredObject: " + uri + " storedObject: " + printSo(so))
     so
@@ -57,6 +60,7 @@ class JiveWebdavStore(jiveContext: JiveContext) extends IWebdavStore with Loggab
 
     val children = folderUri match {
       case "/" => Array[String]("communities", "spaces")
+      case IgnoredRE => null
       case "/communities" =>
         communityNames(rootCommunity.jiveObject) ++ documentNames(rootCommunity.jiveObject)
       case CommunitiesRE(rest) =>
@@ -65,19 +69,19 @@ class JiveWebdavStore(jiveContext: JiveContext) extends IWebdavStore with Loggab
             x match {
               case CommunityCase(c) => communityNames(c) ++ documentNames(c)
               case _ =>
-                logger.info("x is not a community: returning empty array: x : " +x)
+                logger.info("x is not a community: returning empty array: x : " + x)
                 Array[String]() // either a document or None was returned
             }
           case _ =>
             logger.info("did not find a community, found None")
-            Array[String]()
+            null
         }
       case _ =>
-        logger.info("returning empty array for folderUri: "+folderUri)
-        Array[String]()
-        // todo, sometime i want to test to see if the _ matches above will fall to this if not specified.
+        logger.info("returning empty array for folderUri: " + folderUri)
+        null
+    // todo, sometime i want to test to see if the _ matches above will fall to this if not specified.
     }
-    logger.info("JiveWebStore getChildrenNames: " + folderUri + " children: " + printList(children.toList))
+    logger.info("JiveWebStore getChildrenNames: " + folderUri + " children: " + printList(children))
     children
   }
 
@@ -141,7 +145,7 @@ class JiveWebdavStore(jiveContext: JiveContext) extends IWebdavStore with Loggab
         case Nil => None // couldn't find a match
         case head :: tail =>
           head match {
-            // handle the odd case where there may be no entry
+          // handle the odd case where there may be no entry
             case "" =>
               tail match {
                 case Nil => None
@@ -187,11 +191,21 @@ class JiveWebdavStore(jiveContext: JiveContext) extends IWebdavStore with Loggab
     "folder: " + so.isFolder + ",creationDate" + so.getCreationDate + ",lastModified: " + so.getLastModified
   } else {""}
 
-  protected def printList(list: List[String]) = list match {
-    case Nil => ""
-    case _ => "[" + list.reduceLeft(_ + ", " + _) + "]"
+
+  protected def printList(list: Array[String]): String = list match {
+    case null => null
+    case _ => printList(list.toList)
   }
 
-  protected def tokens(uri: String) = uri.split("/").toList
+  protected def printList(list: List[String]): String = list match {
+    case Nil => ""
+    case _ =>
+      "[" + list.reduceLeft(_ + ", " + _) + "]"
+  }
+
+  protected def tokens(uri: String) = {
+    val list: List[String] = uri.split("/").toList
+    list.filter {case "" => false; case _ => true}
+  }
 
 }

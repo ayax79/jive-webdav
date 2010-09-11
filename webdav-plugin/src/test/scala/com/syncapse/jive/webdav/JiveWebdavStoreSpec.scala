@@ -28,6 +28,8 @@ object JiveWebdavStoreSpec extends Specification with Mockito {
   val two = mock[Community]
   two.getName returns "two"
   communityManager.getCommunities(one) returns newJiveIterator(two)
+  communityManager.getCommunities(two) returns emptyJiveIterator
+  documentManager.getDocuments(two) returns emptyJiveIterator
 
   val doc1 = mock[Document]
   doc1.getSubject returns "doc1"
@@ -35,7 +37,7 @@ object JiveWebdavStoreSpec extends Specification with Mockito {
 
   val store = new JiveWebdavStore(mockContext)
 
-  "The webdav store children should " should {
+  "The webdav store children " should {
 
     "be communities and spaces" in {
       val list = store.getChildrenNames(null, "/").toList
@@ -57,6 +59,36 @@ object JiveWebdavStoreSpec extends Specification with Mockito {
       list must contain("doc1")
     }
 
+    "be empty" in {
+      val list = store.getChildrenNames(null, "/communities/one/two")
+      list.length must be(0)
+    }
+
+    "still be empty" in {
+      val list = store.getChildrenNames(null, "/communities/one/two/")
+      list.length must be(0)
+    }
+
+    ".DS_Store must be null" in {
+      store.getChildrenNames(null, "/communities/one/.DS_Store") must beNull
+    }
+
+    ".one should be null" in {
+      store.getChildrenNames(null, "/communities/one/._one") must beNull
+    }
+
+  }
+
+  "Getting a stored object" should {
+
+    "be null ._one" in {
+      store.getStoredObject(null, "/communities/._one") must beNull
+    }
+
+    "be null with .DS_Store" in {
+      store.getStoredObject(null, "/communities/.DS_Store") must beNull
+    }
+    
   }
 
 
