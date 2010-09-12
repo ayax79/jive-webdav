@@ -209,8 +209,7 @@ public class DoPropfind extends AbstractMethod {
             int propertyFindType, Vector<String> properties, int depth,
             String mimeType) throws WebdavException {
 
-        parseProperties(transaction, req, generatedXML, currentPath,
-                propertyFindType, properties, mimeType);
+
 
         if (depth > 0) {
             // no need to get name if depth is already zero
@@ -229,6 +228,12 @@ public class DoPropfind extends AbstractMethod {
                         mimeType);
             }
         }
+        else {
+            parseProperties(transaction, req, generatedXML, currentPath,
+                propertyFindType, properties, mimeType);
+        }
+
+
     }
 
     /**
