@@ -95,21 +95,21 @@ object JiveWebdavStoreSpec extends Specification with Mockito {
   "findCommunityUrl" should {
 
     "return one" in {
-      store.findCommunityUri(List("one"), CommunityCase(root)) match {
+      store.findObjectFromUriTokens(List("one"), CommunityCase(root)) match {
         case Some(c: CommunityCase) => c.jiveObject must be(one)
         case _ => fail("Did not contain a Some(CommunityCase)")
       }
     }
 
     "return two" in {
-      store.findCommunityUri(List("one", "two"), CommunityCase(root)) match {
+      store.findObjectFromUriTokens(List("one", "two"), CommunityCase(root)) match {
         case Some(c: CommunityCase) => c.jiveObject must be(two)
         case _ => fail("Did not contain a Some(CommunityCase)")
       }
     }
 
     "return doc1" in {
-      store.findCommunityUri(List("one", "doc1"), CommunityCase(root)) match {
+      store.findObjectFromUriTokens(List("one", "doc1"), CommunityCase(root)) match {
         case Some(d: DocumentCase) => d.jiveObject must be(doc1)
         case _ => fail("Did not contain a Some(DocumentCase)")
       }
