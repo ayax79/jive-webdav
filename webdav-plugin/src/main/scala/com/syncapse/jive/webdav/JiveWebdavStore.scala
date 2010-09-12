@@ -7,11 +7,9 @@ import net.sf.webdav.{StoredObject, ITransaction, IWebdavStore}
 import java.util.Date
 import scala.collection.JavaConversions
 import com.jivesoftware.community._
-import action.util.RenderUtils
 import java.net.URLEncoder
-import javax.ws.rs.core.SecurityContext
-import org.springframework.security.context.SecurityContextHolder
 import java.io.{ByteArrayInputStream, InputStream}
+import net.sf.webdav.exceptions.WebdavException
 
 class JiveWebdavStore(jiveContext: JiveContext) extends IWebdavStore with Loggable {
   lazy val CommunitiesRE = """\/communities\/([^\s]*)$""".r
@@ -40,12 +38,22 @@ class JiveWebdavStore(jiveContext: JiveContext) extends IWebdavStore with Loggab
 
   def removeObject(transaction: ITransaction, uri: String) = {
     logger.info("JiveWebStore removeObject: " + uri)
-    null
+    throw new WebdavException("unsupported operation")
   }
 
   def getResourceLength(transaction: ITransaction, path: String) = {
     logger.info("JiveWebStore getResourceLength: " + path)
-    0L
+    path match {
+      case "/" | "/communities" | "/spaces" | IgnoredRE => 0L
+      case CommunitiesRE(rest) => findCommunityUri(tokens(rest), rootCommunity) match {
+        case Some(x) => x match {
+          case CommunityCase(c) => 0L
+          case DocumentCase(d) => JiveWebdavUtils.buildStoredObject(x).getResourceLength
+        }
+        case None => 0L
+      }
+      case _ => 0L
+    }
   }
 
   def getChildrenNames(transaction: ITransaction, folderUri: String) = {
@@ -66,13 +74,12 @@ class JiveWebdavStore(jiveContext: JiveContext) extends IWebdavStore with Loggab
         communityNames(rootCommunity.jiveObject) ++ documentNames(rootCommunity.jiveObject)
       case CommunitiesRE(rest) =>
         findCommunityUri(tokens(rest), rootCommunity) match {
-          case Some(x) =>
-            x match {
-              case CommunityCase(c) => communityNames(c) ++ documentNames(c)
-              case _ =>
-                logger.info("x is not a community: returning empty array: x : " + x)
-                Array[String]() // either a document or None was returned
-            }
+          case Some(x) => x match {
+            case CommunityCase(c) => communityNames(c) ++ documentNames(c)
+            case _ =>
+              logger.info("x is not a community: returning empty array: x : " + x)
+              Array[String]() // either a document or None was returned
+          }
           case _ =>
             logger.info("did not find a community, found None")
             null
@@ -89,7 +96,7 @@ class JiveWebdavStore(jiveContext: JiveContext) extends IWebdavStore with Loggab
 
   def setResourceContent(transaction: ITransaction, resourceUri: String, content: InputStream, contentType: String, characterEncoding: String) = {
     logger.info("JiveWebStore setResourceContent: " + resourceUri)
-    0L
+    throw new WebdavException("unsupported operation")
   }
 
   def getResourceContent(transaction: ITransaction, resourceUri: String) = resourceUri match {
@@ -101,7 +108,7 @@ class JiveWebdavStore(jiveContext: JiveContext) extends IWebdavStore with Loggab
             case DocumentCase(d) =>
               d.isTextBody match {
                 case true =>
-                  new ByteArrayInputStream(RenderUtils.renderToHtml(d, jiveContext.getRenderManager).getBytes("utf-8"))
+                  new ByteArrayInputStream(d.getPlainBody.getBytes("utf-8"))
                 case false =>
                   d.getBinaryBody.getData
               }
@@ -114,12 +121,12 @@ class JiveWebdavStore(jiveContext: JiveContext) extends IWebdavStore with Loggab
 
   def createResource(transaction: ITransaction, resourceUri: String) = {
     logger.info("JiveWebStore createResource: " + resourceUri)
-    null
+    throw new WebdavException("unsupported operation")
   }
 
   def createFolder(transaction: ITransaction, folderUri: String) = {
     logger.info("JiveWebStore createFolder: " + folderUri)
-    null
+    throw new WebdavException("unsupported operation")
   }
 
   def rollback(transaction: ITransaction) = {
@@ -205,7 +212,7 @@ class JiveWebdavStore(jiveContext: JiveContext) extends IWebdavStore with Loggab
 
   def printSo(so: StoredObject) = if (so != null) {
     "folder: " + so.isFolder + ",creationDate" + so.getCreationDate + ",lastModified: " + so.getLastModified
-  } else {""}
+  } else {" NULL "}
 
 
   def printList(list: Array[String]): String = list match {
