@@ -4,12 +4,12 @@ import java.security.Principal
 import java.lang.String
 import com.syncapse.jive.Loggable
 import net.sf.webdav.{StoredObject, ITransaction, IWebdavStore}
-import java.util.Date
 import scala.collection.JavaConversions
 import com.jivesoftware.community._
 import java.net.URLEncoder
 import java.io.{ByteArrayInputStream, InputStream}
 import net.sf.webdav.exceptions.WebdavException
+import java.util.{List => JList, Date}
 
 class JiveWebdavStore(jiveContext: JiveContext) extends IWebdavStore with Loggable {
   lazy val CommunitiesRE = """\/communities\/([^\s]*)$""".r
@@ -63,8 +63,8 @@ class JiveWebdavStore(jiveContext: JiveContext) extends IWebdavStore with Loggab
     }
 
     def documentNames(jco: JiveContainer) = {
-      val docs: Iterable[Document] = JavaConversions.asIterable(documentManager.getDocuments(jco))
-      docs.map(d => encodedSubject(d)).toArray[String]
+      val docs = loadDocuments(jco)
+      docs.map(d => documentTitle(d)).toArray[String]
     }
 
     val children = folderUri match {
@@ -87,7 +87,6 @@ class JiveWebdavStore(jiveContext: JiveContext) extends IWebdavStore with Loggab
       case _ =>
         logger.info("returning empty array for folderUri: " + folderUri)
         null
-    // todo, sometime i want to test to see if the _ matches above will fall to this if not specified.
     }
     logger.info("JiveWebStore getChildrenNames: " + folderUri + " children: " + printList(children))
     children
@@ -195,14 +194,12 @@ class JiveWebdavStore(jiveContext: JiveContext) extends IWebdavStore with Loggab
 
   def documentFromCommunity(s: String, c: Community): Option[DocumentCase] = {
     logger.info("documentFromCommunity s: " + s + " c: " + c)
-    val docs: Iterable[Document] = JavaConversions.asIterable(documentManager.getDocuments(c))
-    docs.find(d => encodedSubject(d) == s) match {
+    val docs: Iterable[Document] = loadDocuments(c)
+    docs.find(d => documentTitle(d) == s) match {
       case None => None
       case Some(d) => Some(DocumentCase(d))
     }
   }
-
-  def encodedSubject(d: Document) = URLEncoder.encode(d.getSubject, "utf-8")
 
   object RootStoredObject extends StoredObject {
     setFolder(true)
@@ -229,6 +226,21 @@ class JiveWebdavStore(jiveContext: JiveContext) extends IWebdavStore with Loggab
   def tokens(uri: String) = {
     val list: List[String] = uri.split("/").toList
     list.filter {case "" => false; case _ => true}
+  }
+
+  def documentTitle(d: Document) : String = {
+    val content = d.isTextBody match {
+      case true => d.getSubject
+      case false => d.getBinaryBody.getName
+    }
+    URLEncoder.encode(content, "utf-8")
+  }
+
+  def loadDocuments(c: JiveContainer): List[Document] = {
+    val filter = DocumentResultFilter.createDefaultFilter
+    filter.setRecursive(false)
+    val list: List[Document] = JavaConversions.asIterable(documentManager.getDocuments(c, filter)).toList
+    list.filter { d => !d.isTextBody } // right now we only want binary documentts
   }
 
 }

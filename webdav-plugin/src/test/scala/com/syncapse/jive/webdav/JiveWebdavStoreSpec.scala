@@ -6,9 +6,10 @@ import org.specs.runner.JUnit4
 import scala.collection.JavaConversions.asList
 import com.jivesoftware.community._
 import impl.{EmptyJiveIterator, ListJiveIterator}
+import org.mockito.{Matchers => M}
 
 class JiveWebdavStoreTest extends JUnit4(JiveWebdavStoreSpec)
-object JiveWebdavStoreSpec extends Specification with Mockito {
+object JiveWebdavStoreSpec extends Specification with Mockito  {
   val mockContext = mock[JiveContext]
 
   val communityManager = mock[CommunityManager]
@@ -20,20 +21,25 @@ object JiveWebdavStoreSpec extends Specification with Mockito {
   val root = mock[Community]
   communityManager.getRootCommunity returns root
 
+
   val one = mock[Community]
   one.getName returns "one"
   communityManager.getCommunities(root) returns newJiveIterator(one)
-  documentManager.getDocuments(root) returns emptyJiveIterator
+  documentManager.getDocuments(M.eq(root), any[DocumentResultFilter]) returns emptyJiveIterator
 
   val two = mock[Community]
   two.getName returns "two"
   communityManager.getCommunities(one) returns newJiveIterator(two)
   communityManager.getCommunities(two) returns emptyJiveIterator
-  documentManager.getDocuments(two) returns emptyJiveIterator
+  documentManager.getDocuments(M.eq(two), any[DocumentResultFilter]) returns emptyJiveIterator
 
   val doc1 = mock[Document]
   doc1.getSubject returns "doc1"
-  documentManager.getDocuments(one) returns newJiveIterator(doc1)
+  documentManager.getDocuments(M.eq(one), any[DocumentResultFilter]) returns newJiveIterator(doc1)
+
+  val binaryBody = mock[BinaryBody]
+  doc1.getBinaryBody returns binaryBody
+  binaryBody.getName returns "doc1"
 
   val store = new JiveWebdavStore(mockContext)
 
