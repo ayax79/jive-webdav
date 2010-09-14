@@ -240,7 +240,9 @@ class JiveWebdavStore(jiveContext: JiveContext) extends IWebdavStore with Loggab
     val filter = DocumentResultFilter.createDefaultFilter
     filter.setRecursive(false)
     val list: List[Document] = JavaConversions.asIterable(documentManager.getDocuments(c, filter)).toList
-    list.filter { d => !d.isTextBody } // right now we only want binary documentts
+    // right now we only want binary documentts and it appears that for some reason there is a bug
+    // in jive where recursive docs are always returned, double check.
+    list.filter { d => !d.isTextBody && c.getID == d.getContainerID } 
   }
 
 }
