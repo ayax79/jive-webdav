@@ -142,8 +142,8 @@
     <properties>
         <customer.name>jive-webdav</customer.name>
         <customer.version>1.0-SNAPSHOT</customer.version>
-        <sbs.shortversion>4.5.1</sbs.shortversion>
-        <sbs.version>4.5.1</sbs.version>
+        <sbs.shortversion>4.5.3</sbs.shortversion>
+        <sbs.version>4.5.3</sbs.version>
         <!-- This gets filtered into the setup param in your jive_init.xml Set to false if you want to enter setup screens-->
         <jive.setup>true</jive.setup>
         <cargo.wait>false</cargo.wait>
