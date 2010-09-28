@@ -17,8 +17,6 @@ case object RootUri extends UriCase
 case object NonMatchUri extends UriCase
 
 object JiveWebdavUtils {
-  lazy val CommunitiesRE = """\/communities\/([^\s]*)$""".r
-  lazy val SpacesRE = """\/spaces\/([^\s])*$""".r
   lazy val IgnoredRE = """([^\.]*\/\.[\w\_\s\.]*)""".r // hacks for some files on mac os x we should ignore.
 
   protected lazy val EPOCH = new Date(0)
@@ -45,14 +43,27 @@ object JiveWebdavUtils {
   }
 
 
+  /**
+   * Handles the matching the uri, and passes a result to the the closure.
+   * The result will be an instance of UriCase.
+   *
+   * This allows for some hacks to be make in order to handle some of the cases that were a bit of a pain in the ass to
+   * do otherwise.
+   */
   def matchUrl[A](uri: String)(f: AnyRef => Option[A]): Option[A] = {
     uri match {
       case "/" => f(RootUri)
       case "/communities" => f(CommunityUri(""))
       case "/spaces" => f(SpacesUri(""))
       case IgnoredRE(x) => f(IgnoredUri)
-      case CommunitiesRE(rest) => f(CommunityUri(rest))
-      case _ => f(NonMatchUri)
+      case _ =>
+        val s: Seq[Char] = uri
+        s match {
+          // i used to do this with regexp matching, but these seems to do a better job of just matching the first chunk
+          // while matching anything after it
+          case Seq('/', 'c', 'o', 'm', 'm', 'u', 'n', 'i', 't', 'i', 'e', 's', rest @ _*) => f(CommunityUri(rest.toString))
+          case Seq(_*) => f(NonMatchUri)
+        }
     }
   }
 
