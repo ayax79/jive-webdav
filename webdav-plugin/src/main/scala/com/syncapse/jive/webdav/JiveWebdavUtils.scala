@@ -4,16 +4,58 @@ import net.sf.webdav.StoredObject
 import com.jivesoftware.community._
 import java.util.Date
 
+/**
+ * Top level trait for marking case classes.
+ */
 trait JiveCaseClass
+
+/**
+ * Case class wrapper for communities
+ */
 case class CommunityCase(jiveObject: Community) extends JiveCaseClass
+
+/**
+ * Case class wrapper for Social Groups
+ */
 case class SocialGroupCase(jiveObject: SocialGroupCase) extends JiveCaseClass
+
+/**
+ * Case class wrapper for Documents
+ */
 case class DocumentCase(jiveObject: Document) extends JiveCaseClass
 
+/**
+ * Trait used by all UriCase case classes and objects. These are meant to be used with JiveWebUtils#matchUri
+ */
 trait UriCase
-case class CommunityUri(s: String) extends UriCase
-case class SpacesUri(s: String) extends UriCase
+
+/**
+ * Used to denote that a community url has been matched.
+ * The root community will just be "", so you are encouraged to match this as a seperated case.
+ *
+ * @param rest The rest of the url after /communities (e.g. /one)
+ */
+case class CommunityUri(rest: String) extends UriCase
+
+/**
+ * Used to denote that a space has been matched
+ * @param rest The rest of the url after /spaces
+ */
+case class SpacesUri(rest: String) extends UriCase
+
+/**
+ * Used to denote that a url that should be ignored has been matched.
+ */
 case object IgnoredUri extends UriCase
+
+/**
+ * Used to denote that the root uri has been matched
+ */
 case object RootUri extends UriCase
+
+/**
+ * Used to denote that an unknown or unmatched url has occurred.
+ */
 case object NonMatchUri extends UriCase
 
 object JiveWebdavUtils {
