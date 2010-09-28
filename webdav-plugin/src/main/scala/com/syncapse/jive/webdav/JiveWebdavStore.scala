@@ -137,7 +137,15 @@ class JiveWebdavStore(contextProvider: ContextProvider) extends IWebdavStore wit
             case head :: tail =>
               findObjectFromUriTokens(tail.reverse, rootCommunity) match {
                 case Some(x) => x match {
-                  case CommunityCase(c) => Some(communityManager.createCommunity(c, head, head, head))
+                  case CommunityCase(c) =>
+                    try {
+                      Some(communityManager.createCommunity(c, head, head, head))
+                    }
+                    catch {
+                      case e: Exception =>
+                        logger.warn(e.getMessage, e)
+                        throw new WebdavException(e)
+                    }
                   case _ => None
                 }
                 case None => None
