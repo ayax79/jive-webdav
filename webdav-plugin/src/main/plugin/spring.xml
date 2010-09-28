@@ -29,7 +29,7 @@
                 /rpc/xmlrpc=pluginPreFilterChain, wsRequireSSLFilter, httpSessionContextIntegrationFilter, pluginPostSessionContextFilterChain, basicAuthenticationFilter, wsExceptionTranslator, jiveAuthenticationTranslationFilter, wsAccessTypeCheckFilter, pluginPostFilterChain
                 /rpc/rest/**=pluginPreFilterChain, wsRequireSSLFilter, httpSessionContextIntegrationFilter, pluginPostSessionContextFilterChain, basicAuthenticationFilter, wsExceptionTranslator, jiveAuthenticationTranslationFilter, wsAccessTypeCheckFilter, pluginPostFilterChain
                 /rpc/soap/**=pluginPreFilterChain, wsRequireSSLFilter, httpSessionContextIntegrationFilter, pluginPostSessionContextFilterChain, jiveAuthenticationTranslationFilter, pluginPostFilterChain
-                /webdav/**=httpSessionContextIntegrationFilter,basicAuthenticationFilter,webdavFilter
+                /webdav/**=httpSessionContextIntegrationFilter, basicAuthenticationFilter, jiveAuthenticationTranslationFilter, webdavFilter
                 /__services/xmlrpc=blockServices
                 /__services/rest/**=blockServices
                 /__services/soap/**=blockServices

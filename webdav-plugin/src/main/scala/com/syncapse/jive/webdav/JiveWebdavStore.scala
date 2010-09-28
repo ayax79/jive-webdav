@@ -8,7 +8,8 @@ import scala.collection.JavaConversions
 import com.jivesoftware.community._
 import java.net.URLEncoder
 import java.io.{ByteArrayInputStream, InputStream}
-import net.sf.webdav.exceptions.WebdavException
+import net.sf.webdav.exceptions.{UnauthenticatedException, WebdavException}
+import org.acegisecurity.AuthenticationException
 
 class JiveWebdavStore(contextProvider: ContextProvider) extends IWebdavStore with Loggable {
   protected def documentManager = contextProvider.jiveContext.getDocumentManager
@@ -25,7 +26,7 @@ class JiveWebdavStore(contextProvider: ContextProvider) extends IWebdavStore wit
         }
       }
       case SpacesUri(s) => s match {
-        case "" => JiveSome(JiveWebdavUtils.RootStoredObject)
+        case "" => Some(JiveWebdavUtils.RootStoredObject)
         case _ => None
       }
       case RootUri => Some(JiveWebdavUtils.RootStoredObject)
@@ -146,9 +147,12 @@ class JiveWebdavStore(contextProvider: ContextProvider) extends IWebdavStore wit
                       Some(communityManager.createCommunity(c, head, head, head))
                     }
                     catch {
-                      case e: Exception =>
+                      case e: AuthenticationException =>
                         logger.warn(e.getMessage, e)
-                        throw new WebdavException(e)
+                        throw new UnauthenticatedException(e.getMessage, e)
+                      case ex: Exception =>
+                        logger.warn(ex.getMessage, ex)
+                        throw new WebdavException(ex)
                     }
                   case _ => None
                 }
@@ -170,15 +174,8 @@ class JiveWebdavStore(contextProvider: ContextProvider) extends IWebdavStore wit
     logger.info("commit called")
   }
 
-  def checkAuthentication(transaction: ITransaction) = {
+  def  checkAuthentication(transaction: ITransaction) = {
     logger.info("checkAuthentication called "+ transaction)
-    transaction match {
-      case null => throw new WebdavException("No valid transaction was passed in")
-      case _ =>
-        transaction.getPrincipal match {
-          case null => throw new WebdavException("No principal was passed in")
-        }
-    }
   }
 
   def begin(principal: Principal) = {

@@ -1,7 +1,7 @@
 package com.syncapse.jive.webdav
 
 import javax.servlet._
-import http.HttpServletRequest
+import http.{HttpServletResponse, HttpServletRequest}
 import reflect.BeanProperty
 import net.sf.webdav.WebDavServletBean
 import com.syncapse.jive.Loggable
@@ -10,7 +10,7 @@ import org.springframework.web.context.WebApplicationContext
 /**
  * An acegi filter that wraps the WebdavServlet
  */
-class WebdavFilter extends Filter with Loggable with ApplicationContextAware with ContextProvider {
+class WebdavFilter extends Filter with Loggable with ApplicationContextAware with ContextProvider with JiveAuthenticationProvidable {
   @BeanProperty
   var applicationContext: ApplicationContext = null
 
@@ -34,10 +34,23 @@ class WebdavFilter extends Filter with Loggable with ApplicationContextAware wit
 
   def doFilter(request: ServletRequest, response: ServletResponse, chain: FilterChain) = {
     logger.info("WebdavFilter doFilter called path: " + request.asInstanceOf[HttpServletRequest].getRequestURI)
-    webdav.service(request, response)
+
+    jiveAuthentication match {
+      case Some(a) => a.isAnonymous match {
+        case true => forceAuth(response) 
+        case false => webdav.service(request, response)
+      }
+      case None => forceAuth(response)
+    }
   }
 
   def init(p1: FilterConfig) = {
     // isn't called with spring 
+  }
+
+  protected def forceAuth(servletResponse: ServletResponse) = {
+    val httpResponse = servletResponse.asInstanceOf[HttpServletResponse]
+    httpResponse.addHeader("WWW-Authenticate", "Basic realm=\"Jive SBS\"");
+    httpResponse.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Authentication Required");
   }
 }
