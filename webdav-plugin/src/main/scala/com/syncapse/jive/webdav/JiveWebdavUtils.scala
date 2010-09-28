@@ -50,21 +50,19 @@ object JiveWebdavUtils {
    * This allows for some hacks to be make in order to handle some of the cases that were a bit of a pain in the ass to
    * do otherwise.
    */
-  def matchUrl[A](uri: String)(f: AnyRef => Option[A]): Option[A] = {
-    uri match {
-      case "/" => f(RootUri)
-      case "/communities" => f(CommunityUri(""))
-      case "/spaces" => f(SpacesUri(""))
-      case IgnoredRE(x) => f(IgnoredUri)
-      case _ =>
-        val s: Seq[Char] = uri
-        s match {
-          // i used to do this with regexp matching, but these seems to do a better job of just matching the first chunk
-          // while matching anything after it
-          case Seq('/', 'c', 'o', 'm', 'm', 'u', 'n', 'i', 't', 'i', 'e', 's', rest @ _*) => f(CommunityUri(rest.toString))
-          case Seq(_*) => f(NonMatchUri)
-        }
-    }
+  def matchUrl[A](uri: String)(f: AnyRef => Option[A]): Option[A] = uri match {
+    case "/" => f(RootUri)
+    case "/communities" => f(CommunityUri(""))
+    case "/spaces" => f(SpacesUri(""))
+    case IgnoredRE(x) => f(IgnoredUri)
+    case _ =>
+      val s: Seq[Char] = uri
+      s match {
+      // i used to do this with regexp matching, but these seems to do a better job of just matching the first chunk
+      // while matching anything after it
+        case Seq('/', 'c', 'o', 'm', 'm', 'u', 'n', 'i', 't', 'i', 'e', 's', rest@_*) => f(CommunityUri(rest.toString))
+        case Seq(_*) => f(NonMatchUri)
+      }
   }
 
   protected def buildStoredObjectFromContainer(jc: JiveContainer): StoredObject = {
