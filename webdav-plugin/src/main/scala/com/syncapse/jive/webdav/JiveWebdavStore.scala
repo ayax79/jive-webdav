@@ -250,11 +250,10 @@ class JiveWebdavStore(contextProvider: ContextProvider) extends IWebdavStore wit
   }
 
   def documentTitle(d: Document): String = {
-    val content = d.isTextBody match {
+    d.isTextBody match {
       case true => d.getSubject
       case false => d.getBinaryBody.getName
     }
-    URLEncoder.encode(content, "utf-8")
   }
 
   def loadDocuments(c: JiveContainer): List[Document] = {
