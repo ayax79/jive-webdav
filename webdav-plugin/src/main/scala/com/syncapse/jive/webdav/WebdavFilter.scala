@@ -7,13 +7,10 @@ import net.sf.webdav.WebDavServletBean
 import com.syncapse.jive.Loggable
 import org.springframework.context.{ApplicationContext, ApplicationContextAware}
 import org.springframework.web.context.WebApplicationContext
-import com.jivesoftware.community.lifecycle.spring.SpringJiveContextImpl
-
 /**
  * An acegi filter that wraps the WebdavServlet
  */
-class WebdavFilter extends Filter with Loggable with ApplicationContextAware {
-
+class WebdavFilter extends Filter with Loggable with ApplicationContextAware with ContextProvider {
   @BeanProperty
   var applicationContext: ApplicationContext = null
 
@@ -21,7 +18,7 @@ class WebdavFilter extends Filter with Loggable with ApplicationContextAware {
 
   def init = {
     logger.info("WebdavFilter init called")
-    val store = new JiveWebdavStore(applicationContext.asInstanceOf[SpringJiveContextImpl])
+    val store = new JiveWebdavStore(this)
     webdav = new WebDavServletBean {
       // The webdav servlet needs access to the servlet context
       override def getServletContext = {

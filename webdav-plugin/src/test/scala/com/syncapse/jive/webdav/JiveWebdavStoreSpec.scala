@@ -9,7 +9,7 @@ import impl.{EmptyJiveIterator, ListJiveIterator}
 import org.mockito.{Matchers => M}
 
 class JiveWebdavStoreTest extends JUnit4(JiveWebdavStoreSpec)
-object JiveWebdavStoreSpec extends Specification with Mockito  {
+object JiveWebdavStoreSpec extends Specification with Mockito with ContextProvider {
   val mockContext = mock[JiveContext]
 
   val communityManager = mock[CommunityManager]
@@ -41,7 +41,10 @@ object JiveWebdavStoreSpec extends Specification with Mockito  {
   doc1.getBinaryBody returns binaryBody
   binaryBody.getName returns "doc1"
 
-  val store = new JiveWebdavStore(mockContext)
+
+  override def jiveContext = mockContext
+
+  val store = new JiveWebdavStore(this)
 
   "The webdav store children " should {
 
@@ -94,7 +97,12 @@ object JiveWebdavStoreSpec extends Specification with Mockito  {
     "be null with .DS_Store" in {
       store.getStoredObject(null, "/communities/.DS_Store") must beNull
     }
-    
+
+    "be Empty with Untitled%20Folder" in {
+      //      store.getStoredObject(null, "/communities/one/untitled%20folder") must be(JiveWebdavUtils.EmptyResourceObject.asStoredObject)
+      store.getStoredObject(null, "/communities/one/untitled%20folder") must beNull
+    }
+
   }
 
 
@@ -121,6 +129,38 @@ object JiveWebdavStoreSpec extends Specification with Mockito  {
       }
     }
   }
+
+  "createFolder" should {
+
+    "add a new community" in {
+      store.createFolder(null, "/communities/one/bah")
+      there was one(communityManager).createCommunity(one, "bah", "bah", "bah")
+    }
+
+  }
+
+  "IgnoredRE" should {
+
+    "match correctly for /communities/._one " in {
+
+      val result = "/communities/._one" match {
+        case JiveWebdavUtils.IgnoredRE(m) => true
+        case _ => false
+      }
+      result must beTrue
+
+    }
+
+    "match correctly for /._." in {
+      val result = "/._." match {
+        case JiveWebdavUtils.IgnoredRE(m) => true
+        case _ => false
+      }
+      result must beTrue
+    }
+
+  }
+
 
   def newJiveIterator[A <: JiveObject](args: A*) = new ListJiveIterator[A](asList(args.toList))
 
