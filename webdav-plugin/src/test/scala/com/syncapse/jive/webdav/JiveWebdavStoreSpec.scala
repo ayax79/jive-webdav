@@ -161,6 +161,22 @@ object JiveWebdavStoreSpec extends Specification with Mockito with ContextProvid
 
   }
 
+  "creatNewItem" should {
+    "handle function call" in {
+      store.createNewItem(List("one", "two", "three")) {
+        case (name: String, jc: JiveCaseClass) => jc match {
+          case CommunityCase(c) =>
+            c must be(two)
+            name must be("three")
+            None
+          case _ => fail("did not have a community case")
+        }
+
+        case _ => fail("should end up here")
+      }
+    }
+  }
+
 
   def newJiveIterator[A <: JiveObject](args: A*) = new ListJiveIterator[A](asList(args.toList))
 

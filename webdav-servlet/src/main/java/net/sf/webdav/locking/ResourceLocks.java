@@ -110,13 +110,13 @@ public class ResourceLocks implements IResourceLocks {
             if (lo.addLockedObjectOwner(owner)) {
                 return true;
             } else {
-                LOG.trace("Couldn't set owner \"" + owner
+                LOG.info("Couldn't set owner \"" + owner
                         + "\" to resource at '" + path + "'");
                 return false;
             }
         } else {
             // can not lock
-            LOG.trace("Lock resource at " + path + " failed because"
+            LOG.info("Lock resource at " + path + " failed because"
                     + "\na parent or child resource is currently locked");
             return false;
         }
@@ -137,8 +137,7 @@ public class ResourceLocks implements IResourceLocks {
             } else {
                 // there is no lock at that path. someone tried to unlock it
                 // anyway. could point to a problem
-                LOG
-                        .trace("net.sf.webdav.locking.ResourceLocks.unlock(): no lock for path "
+                LOG.info("net.sf.webdav.locking.ResourceLocks.unlock(): no lock for path "
                                 + path);
                 return false;
             }
@@ -163,8 +162,7 @@ public class ResourceLocks implements IResourceLocks {
         } else {
             // there is no lock at that path. someone tried to unlock it
             // anyway. could point to a problem
-            LOG
-                    .trace("net.sf.webdav.locking.ResourceLocks.unlock(): no lock for path "
+            LOG.info("net.sf.webdav.locking.ResourceLocks.unlock(): no lock for path "
                             + path);
         }
 
