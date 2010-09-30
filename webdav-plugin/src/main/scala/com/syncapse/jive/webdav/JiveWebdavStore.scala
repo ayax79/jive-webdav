@@ -179,7 +179,7 @@ class JiveWebdavStore(contextProvider: ContextProvider) extends IWebdavStore wit
           }
       }
       case _ => None // we are only handling community urls 
-    }
+    }                                                                             
   }
 
   def createFolder(transaction: ITransaction, folderUri: String) = {

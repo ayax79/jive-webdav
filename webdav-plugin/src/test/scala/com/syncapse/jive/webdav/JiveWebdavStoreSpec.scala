@@ -177,6 +177,22 @@ object JiveWebdavStoreSpec extends Specification with Mockito with ContextProvid
     }
   }
 
+  "some case class check stuff" should {
+
+    "work with communities" in {
+
+      val jo: JiveObject = one
+      jo match {
+        case c: Community => c must be(one)
+        case d: Document => fail("should not be a document")
+        case _ => fail("didn't match")
+      }
+    }
+
+
+  }
+
+
 
   def newJiveIterator[A <: JiveObject](args: A*) = new ListJiveIterator[A](asList(args.toList))
 
