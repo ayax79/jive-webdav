@@ -109,22 +109,22 @@ object JiveWebdavStoreSpec extends Specification with Mockito with ContextProvid
   "findCommunityUrl" should {
 
     "return one" in {
-      store.findObjectFromUriTokens(List("one"), CommunityCase(root)) match {
-        case Some(c: CommunityCase) => c.jiveObject must be(one)
+      store.findObjectFromUriTokens(List("one"), root) match {
+        case Some(c: Community) => c must be(one)
         case _ => fail("Did not contain a Some(CommunityCase)")
       }
     }
 
     "return two" in {
-      store.findObjectFromUriTokens(List("one", "two"), CommunityCase(root)) match {
-        case Some(c: CommunityCase) => c.jiveObject must be(two)
+      store.findObjectFromUriTokens(List("one", "two"), root) match {
+        case Some(c: Community) => c must be(two)
         case _ => fail("Did not contain a Some(CommunityCase)")
       }
     }
 
     "return doc1" in {
-      store.findObjectFromUriTokens(List("one", "doc1"), CommunityCase(root)) match {
-        case Some(d: DocumentCase) => d.jiveObject must be(doc1)
+      store.findObjectFromUriTokens(List("one", "doc1"), root) match {
+        case Some(d: Document) => d must be(doc1)
         case _ => fail("Did not contain a Some(DocumentCase)")
       }
     }
@@ -164,8 +164,8 @@ object JiveWebdavStoreSpec extends Specification with Mockito with ContextProvid
   "creatNewItem" should {
     "handle function call" in {
       store.createNewItem(List("one", "two", "three")) {
-        case (name: String, jc: JiveCaseClass) => jc match {
-          case CommunityCase(c) =>
+        case (name: String, jc: JiveObject) => jc match {
+          case c: Community =>
             c must be(two)
             name must be("three")
             None

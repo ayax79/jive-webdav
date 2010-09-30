@@ -3,26 +3,7 @@ package com.syncapse.jive.webdav
 import net.sf.webdav.StoredObject
 import com.jivesoftware.community._
 import java.util.Date
-
-/**
- * Top level trait for marking case classes.
- */
-trait JiveCaseClass
-
-/**
- * Case class wrapper for communities
- */
-case class CommunityCase(jiveObject: Community) extends JiveCaseClass
-
-/**
- * Case class wrapper for Social Groups
- */
-case class SocialGroupCase(jiveObject: SocialGroupCase) extends JiveCaseClass
-
-/**
- * Case class wrapper for Documents
- */
-case class DocumentCase(jiveObject: Document) extends JiveCaseClass
+import socialgroup.SocialGroup
 
 /**
  * Trait used by all UriCase case classes and objects. These are meant to be used with JiveWebUtils#matchUri
@@ -77,10 +58,10 @@ object JiveWebdavUtils {
     def asStoredObject = this.asInstanceOf[StoredObject]
   }
 
-  def buildStoredObject(jo: JiveCaseClass): StoredObject = jo match {
-    case CommunityCase(c) => buildStoredObjectFromContainer(c.asInstanceOf[JiveContainer])
-    case SocialGroupCase(c) => buildStoredObjectFromContainer(c.asInstanceOf[JiveContainer])
-    case DocumentCase(d) => buildContentObject(d)
+  def buildStoredObject(jo: JiveObject): StoredObject = jo match {
+    case c: Community => buildStoredObjectFromContainer(c.asInstanceOf[JiveContainer])
+    case sg: SocialGroup => buildStoredObjectFromContainer(sg.asInstanceOf[JiveContainer])
+    case d: Document => buildContentObject(d)
     case _ => throw new IllegalStateException("Case class not handled " + jo)
   }
 

@@ -13,7 +13,7 @@ object JiveWebdavUtilsSpec extends Specification with org.specs.mock.Mockito {
 
     "build a StoredObject for a Community in " in {
       val c = mock[Community]
-      val result = buildStoredObject(CommunityCase(c))
+      val result = buildStoredObject(c)
       result must notBeNull
       result.isFolder must be(true)
       result.isResource must be (false)
@@ -23,7 +23,7 @@ object JiveWebdavUtilsSpec extends Specification with org.specs.mock.Mockito {
       val d = mock[Document]
       d.isTextBody returns true
       d.getPlainBody returns "This is a plain body"
-      val result = buildStoredObject(DocumentCase(d))
+      val result = buildStoredObject(d)
       result must notBeNull
       result.isFolder must be(false)
       result.isResource must be(true)
