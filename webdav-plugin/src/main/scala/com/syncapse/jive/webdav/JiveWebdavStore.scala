@@ -268,7 +268,7 @@ class JiveWebdavStore(contextProvider: ContextProvider) extends IWebdavStore wit
                   }
                 case Some(c) =>
                   tail match {
-                    case Nil => Option(c) // return the community we are out of tokens.
+                    case Nil => Some(c) // return the community we are out of tokens.
                     case _ => findObjectFromUriTokens(tail, c)
                   }
               }
