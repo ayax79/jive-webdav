@@ -3,7 +3,6 @@ package com.syncapse.jive.webdav
 import java.security.Principal
 import java.lang.String
 import com.syncapse.jive.Loggable
-import net.sf.webdav.{StoredObject, ITransaction, IWebdavStore}
 import scala.collection.JavaConversions
 import com.jivesoftware.community._
 import net.sf.webdav.exceptions.{UnauthenticatedException, WebdavException}
@@ -14,8 +13,9 @@ import org.apache.commons.io.IOUtils
 import java.io.{ByteArrayOutputStream, ByteArrayInputStream, InputStream}
 import socialgroup.SocialGroup
 import web.MimeTypeManager
+import net.sf.webdav.{StoredObject, ITransaction, IWebdavStore}
 
-class JiveWebdavStore(contextProvider: ContextProvider) extends IWebdavStore with Loggable with JiveAuthenticationProvidable {
+class JiveWebdavStore(contextProvider: ContextProvider, tmpStore: IWebdavStore) extends IWebdavStore with Loggable with JiveAuthenticationProvidable {
   protected def documentManager = contextProvider.jiveContext.getDocumentManager
 
   protected def communityManager = contextProvider.jiveContext.getCommunityManager
@@ -24,21 +24,28 @@ class JiveWebdavStore(contextProvider: ContextProvider) extends IWebdavStore wit
 
   protected def mimeTypeManager: MimeTypeManager = contextProvider.jiveContext.getSpringBean("mimeTypeManager")
 
-  def getStoredObject(transaction: ITransaction, uri: String) = {
+  override def getStoredObject(transaction: ITransaction, uri: String) = {
+    def tmpGetStored = {
+      tmpStore.getStoredObject(transaction, uri) match {
+        case null => None
+        case s: StoredObject => Some(s)
+      }
+    }
+
     val so = JiveWebdavUtils.matchUrl(uri) {
       case CommunityUri(s) => s match {
         case "" => Some(JiveWebdavUtils.buildStoredObject(rootCommunity)) // root community
         case _ => findObjectFromUriTokens(tokens(s), rootCommunity) match {
-          case None => None
+          case None => tmpGetStored
           case Some(x) => Some(JiveWebdavUtils.buildStoredObject(x))
         }
       }
       case SpacesUri(s) => s match {
         case "" => Some(JiveWebdavUtils.RootStoredObject)
-        case _ => None
+        case _ => tmpGetStored
       }
       case RootUri => Some(JiveWebdavUtils.RootStoredObject)
-      case _ => None
+      case _ => tmpGetStored
     } match {
       case Some(x) => x
       case None => null
@@ -47,37 +54,33 @@ class JiveWebdavStore(contextProvider: ContextProvider) extends IWebdavStore wit
     so
   }
 
-  def removeObject(transaction: ITransaction, uri: String) = {
+  override def removeObject(transaction: ITransaction, uri: String) = {
     logger.info("JiveWebStore removeObject: " + uri)
     throw new WebdavException("unsupported operation")
   }
 
-  def getResourceLength(transaction: ITransaction, path: String) = {
+  override def getResourceLength(transaction: ITransaction, path: String) = {
+    def tmpGetResourceLength = Some(tmpStore.getResourceLength(transaction, path))
+
     logger.info("JiveWebStore getResourceLength: " + path)
     JiveWebdavUtils.matchUrl(path) {
       case CommunityUri(rest) => findObjectFromUriTokens(tokens(rest), rootCommunity) match {
         case Some(x) => x match {
           case d: Document => Some(JiveWebdavUtils.buildStoredObject(x).getResourceLength)
-          case _ => None // we only care about documents
+          case _ => None
         }
-        case None => None // couldn't find a matching object
+        // check to see if their is a tmp file for it
+        case None => tmpGetResourceLength
       }
+      case _ => tmpGetResourceLength
     } match {
       case Some(s) => s
       case None => 0L
     }
   }
 
-  def getChildrenNames(transaction: ITransaction, folderUri: String) = {
-    def communityNames(community: Community) = {
-      val communities: Iterable[Community] = JavaConversions.asIterable(communityManager.getCommunities(community))
-      communities.map(c => c.getName).toArray[String]
-    }
+  override def getChildrenNames(transaction: ITransaction, folderUri: String) = {
 
-    def documentNames(jco: JiveContainer) = {
-      val docs = loadDocuments(jco)
-      docs.map(d => documentTitle(d)).toArray[String]
-    }
 
     val children = JiveWebdavUtils.matchUrl(folderUri) {
       case RootUri => Some(Array("communities", "spaces"))
@@ -102,7 +105,7 @@ class JiveWebdavStore(contextProvider: ContextProvider) extends IWebdavStore wit
   }
 
 
-  def setResourceContent(transaction: ITransaction, resourceUri: String, content: InputStream, contentType: String, characterEncoding: String) = {
+  override def setResourceContent(transaction: ITransaction, resourceUri: String, content: InputStream, contentType: String, characterEncoding: String) = {
     logger.info("JiveWebStore setResourceContent: " + resourceUri)
     JiveWebdavUtils.matchUrl(resourceUri) {
       case CommunityUri(rest) => rest match {
@@ -133,7 +136,7 @@ class JiveWebdavStore(contextProvider: ContextProvider) extends IWebdavStore wit
     }
   }
 
-  def getResourceContent(transaction: ITransaction, resourceUri: String) = JiveWebdavUtils.matchUrl(resourceUri) {
+  override def getResourceContent(transaction: ITransaction, resourceUri: String) = JiveWebdavUtils.matchUrl(resourceUri) {
     case CommunityUri(rest) => rest match {
       case "" => None // root community
       case _ => findObjectFromUriTokens(tokens(rest), rootCommunity) match {
@@ -156,7 +159,7 @@ class JiveWebdavStore(contextProvider: ContextProvider) extends IWebdavStore wit
   }
 
 
-  def createResource(transaction: ITransaction, resourceUri: String) = {
+  override def createResource(transaction: ITransaction, resourceUri: String) = {
     logger.info("JiveWebStore createResource: " + resourceUri)
     JiveWebdavUtils.matchUrl(resourceUri) {
       case CommunityUri(rest) => rest match {
@@ -180,10 +183,10 @@ class JiveWebdavStore(contextProvider: ContextProvider) extends IWebdavStore wit
           }
       }
       case _ => None // we are only handling community urls 
-    }                                                                             
+    }
   }
 
-  def createFolder(transaction: ITransaction, folderUri: String) = {
+  override def createFolder(transaction: ITransaction, folderUri: String) = {
     logger.info("JiveWebStore createFolder: " + folderUri)
     JiveWebdavUtils.matchUrl(folderUri) {
       case CommunityUri(rest) => rest match {
@@ -214,28 +217,28 @@ class JiveWebdavStore(contextProvider: ContextProvider) extends IWebdavStore wit
     }
   }
 
-  def rollback(transaction: ITransaction) = {
+  override def rollback(transaction: ITransaction) = {
     logger.info("rollback called")
   }
 
-  def commit(transaction: ITransaction) = {
+  override def commit(transaction: ITransaction) = {
     logger.info("commit called")
   }
 
-  def checkAuthentication(transaction: ITransaction) = {
+  override def checkAuthentication(transaction: ITransaction) = {
     logger.info("checkAuthentication called " + transaction)
   }
 
-  def begin(principal: Principal) = {
+  override def begin(principal: Principal) = {
     logger.info("begin called principal: " + principal)
     new ITransaction {
       def getPrincipal = principal
     }
   }
 
-  def rootCommunity = communityManager.getRootCommunity
+  protected def rootCommunity = communityManager.getRootCommunity
 
-  def matchingCommunity(c: Community, name: String): Option[Community] = {
+  protected def matchingCommunity(c: Community, name: String): Option[Community] = {
     logger.info("matchingCommunity c: " + c.getName + " name: " + name)
     // todo, caching or something more efficient here
     val communities: Iterable[Community] = JavaConversions.asIterable(communityManager.getCommunities(c))
@@ -245,7 +248,7 @@ class JiveWebdavStore(contextProvider: ContextProvider) extends IWebdavStore wit
     }
   }
 
-  def findObjectFromUriTokens(tokens: List[String], j: JiveObject): Option[JiveObject] = j match {
+  protected[webdav] def findObjectFromUriTokens(tokens: List[String], j: JiveObject): Option[JiveObject] = j match {
   // go until we find a document, even if there are more tokens (we will ignore them)
     case d: Document => Some(d)
     case c: Community =>
@@ -278,7 +281,7 @@ class JiveWebdavStore(contextProvider: ContextProvider) extends IWebdavStore wit
       }
   }
 
-  def documentFromCommunity(s: String, c: Community): Option[Document] = {
+  protected def documentFromCommunity(s: String, c: Community): Option[Document] = {
     logger.info("documentFromCommunity s: " + s + " c: " + c)
     val docs: Iterable[Document] = loadDocuments(c)
     docs.find(d => documentTitle(d) == s) match {
@@ -287,22 +290,22 @@ class JiveWebdavStore(contextProvider: ContextProvider) extends IWebdavStore wit
     }
   }
 
-  def printSo(so: StoredObject) = so match {
+  protected def printSo(so: StoredObject) = so match {
     case null => " NULL "
     case _ => "folder: " + so.isFolder + ",creationDate" + so.getCreationDate + ",lastModified: " + so.getLastModified
   }
 
-  def printList(list: Array[String]): String = list match {
+  protected def printList(list: Array[String]): String = list match {
     case null => null
     case _ => printList(list.toList)
   }
 
-  def printList(list: List[String]): String = list match {
+  protected def printList(list: List[String]): String = list match {
     case Nil => ""
     case _ => "[" + list.reduceLeft(_ + ", " + _) + "]"
   }
 
-  def tokens(uri: String) = {
+  protected def tokens(uri: String) = {
     val list: List[String] = uri.split("/").toList
     list.filter {
       case "" => false;
@@ -310,12 +313,12 @@ class JiveWebdavStore(contextProvider: ContextProvider) extends IWebdavStore wit
     }
   }
 
-  def documentTitle(d: Document): String = d.isTextBody match {
+  protected def documentTitle(d: Document): String = d.isTextBody match {
     case true => d.getSubject
     case false => d.getBinaryBody.getName
   }
 
-  def loadDocuments(c: JiveContainer): List[Document] = {
+  protected def loadDocuments(c: JiveContainer): List[Document] = {
     val filter = DocumentResultFilter.createDefaultFilter
     filter.setRecursive(false)
     val list: List[Document] = JavaConversions.asIterable(documentManager.getDocuments(c, filter)).toList
@@ -330,7 +333,7 @@ class JiveWebdavStore(contextProvider: ContextProvider) extends IWebdavStore wit
    * Handles determining which part of the url is the item to be created and which part is
    * the container it should be created under. After determining it will pass information to the closure.
    */
-  def createNewItem(tokens: List[String])(f: (String, JiveObject) => Option[AnyRef]): Option[AnyRef] = tokens.reverse match {
+  protected[webdav] def createNewItem(tokens: List[String])(f: (String, JiveObject) => Option[AnyRef]): Option[AnyRef] = tokens.reverse match {
   // we need to seperate the last item from the url from the rest of the list
   // the last item will be the name of the community
   // the rest of the url tokens will be the communities underneath
@@ -345,6 +348,16 @@ class JiveWebdavStore(contextProvider: ContextProvider) extends IWebdavStore wit
         }
         case None => None
       }
+  }
+
+  protected def communityNames(community: Community) = {
+    val communities: Iterable[Community] = JavaConversions.asIterable(communityManager.getCommunities(community))
+    communities.map(c => c.getName).toArray[String]
+  }
+
+  protected def documentNames(jco: JiveContainer) = {
+    val docs = loadDocuments(jco)
+    docs.map(d => documentTitle(d)).toArray[String]
   }
 
 

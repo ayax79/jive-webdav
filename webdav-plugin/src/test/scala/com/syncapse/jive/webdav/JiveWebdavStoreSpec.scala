@@ -44,7 +44,7 @@ object JiveWebdavStoreSpec extends Specification with Mockito with ContextProvid
 
   override def jiveContext = mockContext
 
-  val store = new JiveWebdavStore(this)
+  val store = new JiveWebdavStore(this, null)
 
   "The webdav store children " should {
 

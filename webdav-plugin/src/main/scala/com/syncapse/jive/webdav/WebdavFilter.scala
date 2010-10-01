@@ -3,10 +3,13 @@ package com.syncapse.jive.webdav
 import javax.servlet._
 import http.{HttpServletResponse, HttpServletRequest}
 import reflect.BeanProperty
-import net.sf.webdav.WebDavServletBean
 import com.syncapse.jive.Loggable
 import org.springframework.context.{ApplicationContext, ApplicationContextAware}
 import org.springframework.web.context.WebApplicationContext
+import com.jivesoftware.community.JiveHome
+import java.io.File
+import net.sf.webdav.{LocalFileSystemStore, IWebdavStore, WebDavServletBean}
+
 /**
  * An acegi filter that wraps the WebdavServlet
  */
@@ -18,7 +21,13 @@ class WebdavFilter extends Filter with Loggable with ApplicationContextAware wit
 
   def init = {
     logger.info("WebdavFilter init called")
-    val store = new JiveWebdavStore(this)
+
+    val tmpRoot = new File(JiveHome.getCache, "webdav")
+    if (!tmpRoot.exists) tmpRoot.mkdirs()
+
+    val tmpStore: IWebdavStore = new LocalFileSystemStore(tmpRoot)
+
+    val store = new JiveWebdavStore(this, tmpStore)
     webdav = new WebDavServletBean {
       // The webdav servlet needs access to the servlet context
       override def getServletContext = {
