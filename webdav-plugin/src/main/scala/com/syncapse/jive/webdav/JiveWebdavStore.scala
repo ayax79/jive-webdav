@@ -28,12 +28,12 @@ import net.sf.webdav.{StoredObject, ITransaction, IWebdavStore}
  * @author Andrew Wright
  */
 class JiveWebdavStore(contextProvider: ContextProvider, tmpStore: IWebdavStore) extends IWebdavStore with Loggable with JiveAuthenticationProvidable {
+
+  // eventually I want to try to clean this all up and see if I can adapt the cake pattern to
+  // jive - http://jonasboner.com/2008/10/06/real-world-scala-dependency-injection-di.html
   protected def documentManager = contextProvider.jiveContext.getDocumentManager
-
   protected def communityManager = contextProvider.jiveContext.getCommunityManager
-
   protected def documentTypeManager = contextProvider.jiveContext.getDocumentTypeManager
-
   protected def mimeTypeManager: MimeTypeManager = contextProvider.jiveContext.getSpringBean("mimeTypeManager")
 
   override def getStoredObject(transaction: ITransaction, uri: String) = {
