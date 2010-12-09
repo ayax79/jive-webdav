@@ -15,6 +15,18 @@ import socialgroup.SocialGroup
 import web.MimeTypeManager
 import net.sf.webdav.{StoredObject, ITransaction, IWebdavStore}
 
+/**
+ * A IWebdavStore implementation that uses jive sbs as its backend.
+ *
+ * NOTE:
+ * I may consider just wiring this whole class with spring one day, though I am trying to find creative ways of not using
+ * spring within my scala programming. I also dislike having to have some many damn parameters, which i would have to
+ * have if i were using spring.
+ *
+ * @param contextProvider A context provider implementation that we can use to acquire managers and other spring beans with.
+ * @param tmpStore Used for storing tmp files, other and other files that we don't want to be stored as actual sbs documents.
+ * @author Andrew Wright
+ */
 class JiveWebdavStore(contextProvider: ContextProvider, tmpStore: IWebdavStore) extends IWebdavStore with Loggable with JiveAuthenticationProvidable {
   protected def documentManager = contextProvider.jiveContext.getDocumentManager
 
@@ -25,11 +37,9 @@ class JiveWebdavStore(contextProvider: ContextProvider, tmpStore: IWebdavStore) 
   protected def mimeTypeManager: MimeTypeManager = contextProvider.jiveContext.getSpringBean("mimeTypeManager")
 
   override def getStoredObject(transaction: ITransaction, uri: String) = {
-    def tmpGetStored = {
-      tmpStore.getStoredObject(transaction, uri) match {
-        case null => None
-        case s: StoredObject => Some(s)
-      }
+    def tmpGetStored = tmpStore.getStoredObject(transaction, uri) match {
+      case null => None
+      case s: StoredObject => Some(s)
     }
 
     val so = JiveWebdavUtils.matchUrl(uri) {
@@ -67,7 +77,7 @@ class JiveWebdavStore(contextProvider: ContextProvider, tmpStore: IWebdavStore) 
       case CommunityUri(rest) => findObjectFromUriTokens(tokens(rest), rootCommunity) match {
         case Some(x) => x match {
           case d: Document => Some(JiveWebdavUtils.buildStoredObject(x).getResourceLength)
-          case _ => None
+          case _ => None // another type of jive content we are ignoring
         }
         // check to see if their is a tmp file for it
         case None => tmpGetResourceLength
@@ -81,6 +91,10 @@ class JiveWebdavStore(contextProvider: ContextProvider, tmpStore: IWebdavStore) 
 
   override def getChildrenNames(transaction: ITransaction, folderUri: String) = {
 
+    def tmpChildNames = tmpStore.getChildrenNames(transaction, folderUri) match {
+      case null => None
+      case a: Array[String] => Some(a)
+    }
 
     val children = JiveWebdavUtils.matchUrl(folderUri) {
       case RootUri => Some(Array("communities", "spaces"))
@@ -89,12 +103,12 @@ class JiveWebdavStore(contextProvider: ContextProvider, tmpStore: IWebdavStore) 
         case _ => findObjectFromUriTokens(tokens(rest), rootCommunity) match {
           case Some(x) => x match {
             case c: Community => Some(communityNames(c) ++ documentNames(c))
-            case _ => None
+            case _ => None // another type of jive content we are ignoring
           }
-          case _ => None
+          case _ => tmpChildNames
         }
       }
-      case _ => None
+      case _ => tmpChildNames
     } match {
       case Some(x) => x
       case None => null
@@ -106,60 +120,84 @@ class JiveWebdavStore(contextProvider: ContextProvider, tmpStore: IWebdavStore) 
 
 
   override def setResourceContent(transaction: ITransaction, resourceUri: String, content: InputStream, contentType: String, characterEncoding: String) = {
+    def tmpSetContent = Some(tmpStore.setResourceContent(transaction, resourceUri, content, contentType, characterEncoding))
+
     logger.info("JiveWebStore setResourceContent: " + resourceUri)
     JiveWebdavUtils.matchUrl(resourceUri) {
       case CommunityUri(rest) => rest match {
         case "" => None // we don't care about the root community
-        case _ => findObjectFromUriTokens(tokens(rest), rootCommunity) match {
-          case Some(x) => x match {
-            case d: Document => d.isTextBody match {
-              case true =>
-                val out = new ByteArrayOutputStream
-                IOUtils.copy(content, out)
-                d.setBody(JAXPUtils.createDocument(JiveHtmlElement.Body.getTag(), new String(out.toByteArray)))
-                d.save
-                Some(d)
-              case false =>
-                val bb: BinaryBody = d.getBinaryBody
-                d.setBinaryBody(bb.getName, contentType, content)
-                d.save
-                Some(d)
+        case _ =>
+          val urlTokens = tokens(rest)
+          findObjectFromUriTokens(urlTokens, rootCommunity) match {
+            case Some(x) => x match {
+              case d: Document => d.isTextBody match {
+                case true =>
+                  val out = new ByteArrayOutputStream
+                  IOUtils.copy(content, out)
+                  d.setBody(JAXPUtils.createDocument(JiveHtmlElement.Body.getTag(), new String(out.toByteArray)))
+                  d.save
+                  Some(d)
+                case false =>
+                  val bb: BinaryBody = d.getBinaryBody
+                  d.setBinaryBody(bb.getName, contentType, content)
+                  d.save
+                  Some(d)
+              }
+              case _ => None // another type of jive content we are ignoring
             }
-            case _ => None // we only care about documents
+            case None =>
+              // Maybe we need to create the content
+              createNewItem(urlTokens) {
+                case (name: String, jc: JiveContainer) => jc match {
+                  case c: Community => createDocument(jc, name, contentType, content)
+                  case _ => None // Only matching communities for now
+                }
+              }
+
           }
-          case None => None // didn't find anything that matched the url
-        }
       }
+      case _ => tmpSetContent // handle any other urls as tmp files
     } match {
-      case Some(d) => JiveWebdavUtils.buildStoredObject(d).getResourceLength
+      case Some(x) => x match {
+        case d: Document => JiveWebdavUtils.buildStoredObject(d).getResourceLength
+        case l: Long => l
+      }
       case None => 0L
     }
   }
 
-  override def getResourceContent(transaction: ITransaction, resourceUri: String) = JiveWebdavUtils.matchUrl(resourceUri) {
-    case CommunityUri(rest) => rest match {
-      case "" => None // root community
-      case _ => findObjectFromUriTokens(tokens(rest), rootCommunity) match {
-        case Some(x) =>
-          x match {
+  override def getResourceContent(transaction: ITransaction, resourceUri: String) = {
+    def tmpGetContent = tmpStore.getResourceContent(transaction, resourceUri) match {
+      case null => None
+      case in: InputStream => Some(in)
+    }
+
+    JiveWebdavUtils.matchUrl(resourceUri) {
+      case CommunityUri(rest) => rest match {
+        case "" => None // root community
+        case _ => findObjectFromUriTokens(tokens(rest), rootCommunity) match {
+          case Some(x) => x match {
             case d: Document =>
               d.isTextBody match {
                 case true => Some(new ByteArrayInputStream(d.getPlainBody.getBytes("utf-8")))
                 case false => Some(d.getBinaryBody.getData)
               }
-            case _ => None
+            case _ => None // matched other content type that we don't care about.
           }
-        case _ => None
+          case _ => tmpGetContent
+        }
       }
+      case _ => tmpGetContent
+    } match {
+      case Some(s) => s
+      case None => null
     }
-    case _ => None
-  } match {
-    case Some(s) => s
-    case None => null
   }
 
 
   override def createResource(transaction: ITransaction, resourceUri: String) = {
+    def tmpCreateResource = tmpStore.createResource(transaction, resourceUri)
+
     logger.info("JiveWebStore createResource: " + resourceUri)
     JiveWebdavUtils.matchUrl(resourceUri) {
       case CommunityUri(rest) => rest match {
@@ -168,21 +206,14 @@ class JiveWebdavStore(contextProvider: ContextProvider, tmpStore: IWebdavStore) 
           createNewItem(tokens(rest)) {
             case (name: String, jc: JiveObject) => jc match {
               case c: Community =>
-                currentUser match {
-                  case Some(u) =>
-                    val dt = documentTypeManager.createDocumentType(name, name) // use the name as the description
-                    val doc: Document = documentManager.createDocument(u, dt, null, name, "")
-                    val mimeType = mimeTypeManager.getExtensionMimeType(name)
-                    doc.setBinaryBody(name, mimeType, new ByteArrayInputStream(name.getBytes("UTF-8")))
-                    documentManager.addDocument(c, doc, null)
-                    Some(doc)
-                  case None => None // user is not authenticated
-                }
+                val mimeType = mimeTypeManager.getExtensionMimeType(name)
+                createDocument(jc.asInstanceOf[JiveContainer], name, mimeType, new ByteArrayInputStream(name.getBytes("UTF-8")))
               case _ => None // we are only handling documents created under a community
             }
           }
       }
-      case _ => None // we are only handling community urls 
+      case _ => tmpCreateResource
+      None
     }
   }
 
@@ -210,10 +241,9 @@ class JiveWebdavStore(contextProvider: ContextProvider, tmpStore: IWebdavStore) 
             }
           }
       }
-      case _ => None
-    } match {
-      case Some(s) => s // Just return the result
-      case None => new WebdavException("Cannot create a folder at: " + folderUri) // Dies since we couldn't create the folder
+      case _ =>
+        tmpStore.createFolder(transaction, folderUri)
+        None
     }
   }
 
@@ -248,6 +278,23 @@ class JiveWebdavStore(contextProvider: ContextProvider, tmpStore: IWebdavStore) 
     }
   }
 
+  /**
+   * Method takes a uri tokens, and tries to find a matching object.
+   *
+   * This method will be called recursively until it find the correct match.
+   * A standard initial call to it may look something like this:
+   * findObjectFromUriTokens(tokens(uri), rootCommunity)
+   *
+   * Which would mean start from the rootCommunity and use the current uri portion tokenized.
+   *
+   * Note that this method expects that you stripped off the /community or /spaces
+   *
+   * Uri Tokens:
+   * If the uri is something like /one/two/three then the tokens will be List("one", "two", "three").
+   *
+   * @param tokens Tokens matching the uri
+   * @param tokens The jive object at the current context.
+   */
   protected[webdav] def findObjectFromUriTokens(tokens: List[String], j: JiveObject): Option[JiveObject] = j match {
   // go until we find a document, even if there are more tokens (we will ignore them)
     case d: Document => Some(d)
@@ -333,7 +380,7 @@ class JiveWebdavStore(contextProvider: ContextProvider, tmpStore: IWebdavStore) 
    * Handles determining which part of the url is the item to be created and which part is
    * the container it should be created under. After determining it will pass information to the closure.
    */
-  protected[webdav] def createNewItem(tokens: List[String])(f: (String, JiveObject) => Option[AnyRef]): Option[AnyRef] = tokens.reverse match {
+  protected[webdav] def createNewItem(tokens: List[String])(f: (String, JiveContainer) => Option[AnyRef]): Option[AnyRef] = tokens.reverse match {
   // we need to seperate the last item from the url from the rest of the list
   // the last item will be the name of the community
   // the rest of the url tokens will be the communities underneath
@@ -342,8 +389,8 @@ class JiveWebdavStore(contextProvider: ContextProvider, tmpStore: IWebdavStore) 
       // reverse the tail half the list back again so that we can acquire the parent community
       findObjectFromUriTokens(tail.reverse, rootCommunity) match {
         case Some(x) => x match {
-          case c: Community => f(head, x)
-          case sg: SocialGroup => f(head, x)
+          case c: Community => f(head, c.asInstanceOf[JiveContainer])
+          case sg: SocialGroup => f(head, sg.asInstanceOf[JiveContainer])
           case _ => None
         }
         case None => None
@@ -360,5 +407,20 @@ class JiveWebdavStore(contextProvider: ContextProvider, tmpStore: IWebdavStore) 
     docs.map(d => documentTitle(d)).toArray[String]
   }
 
+  protected[webdav] def createDocument(jc: JiveContainer, name: String, mimeType: String, in: InputStream): Option[Document] = {
+    logger.info("createDocument called: name: "+name)
+    currentUser match {
+      case Some(u) =>
+        val dt = documentTypeManager.createDocumentType(name, name) // use the name as the description
+        val doc: Document = documentManager.createDocument(u, dt, null, name, "")
+        doc.setBinaryBody(name, mimeType, in)
+        doc.save
+        documentManager.addDocument(jc, doc, null)
+        Some(doc)
+      case None =>
+        logger.info("Cannot create document, no user exists")
+        None
+    }
+  }
 
 }

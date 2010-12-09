@@ -109,6 +109,11 @@ public class LocalFileSystemStore implements IWebdavStore {
         LOG.trace("LocalFileSystemStore.setResourceContent(" + uri + ")");
         File file = new File(_root, uri);
         try {
+            //customized: create the file if it doesn't exist
+            File parent = file.getParentFile();
+            if (!parent.exists()) parent.mkdirs();
+            if (!file.exists()) file.createNewFile();
+
             OutputStream os = new BufferedOutputStream(new FileOutputStream(
                     file), BUF_SIZE);
             try {
