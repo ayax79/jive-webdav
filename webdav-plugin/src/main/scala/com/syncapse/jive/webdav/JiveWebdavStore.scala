@@ -38,24 +38,38 @@ class JiveWebdavStore(contextProvider: ContextProvider, tmpStore: IWebdavStore) 
 
   override def getStoredObject(transaction: ITransaction, uri: String) = {
     def tmpGetStored = tmpStore.getStoredObject(transaction, uri) match {
-      case null => None
-      case s: StoredObject => Some(s)
+      case null =>
+        logger.info("tmpGetStored returning None")
+        None
+      case s: StoredObject =>
+        logger.info("tmpGetStored returning Some: " + s)
+        Some(s)
     }
 
     val so = JiveWebdavUtils.matchUrl(uri) {
       case CommunityUri(s) => s match {
-        case "" => Some(JiveWebdavUtils.buildStoredObject(rootCommunity)) // root community
+        case "" =>
+          logger.info("getStoredObject: matchURL:communityUri \"\" handling as rootCommunity")
+          Some(JiveWebdavUtils.buildStoredObject(rootCommunity)) // root community
         case _ => findObjectFromUriTokens(tokens(s), rootCommunity) match {
-          case None => tmpGetStored
-          case Some(x) => Some(JiveWebdavUtils.buildStoredObject(x))
+          case None =>
+            logger.info("getStoredObject: matchURL:communityUri None, handling as tmpGetStored")
+            tmpGetStored
+          case Some(x) =>
+            logger.info(String.format("getStoredObject: matchURL:communityUri Some(%s), buildStoredObject", x))
+            Some(JiveWebdavUtils.buildStoredObject(x))
         }
       }
       case SpacesUri(s) => s match {
         case "" => Some(JiveWebdavUtils.RootStoredObject)
         case _ => tmpGetStored
       }
-      case RootUri => Some(JiveWebdavUtils.RootStoredObject)
-      case _ => tmpGetStored
+      case RootUri =>
+        logger.info("getStoredObject: matchURL Root, handling as RootStoredObject")
+        Some(JiveWebdavUtils.RootStoredObject)
+      case _ =>
+        logger.info("getStoredObject: matchURL _ handling as tmpGetStored")
+        tmpGetStored
     } match {
       case Some(x) => x
       case None => null
