@@ -1,0 +1,12 @@
+<plugin xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:noNamespaceSchemaLocation="http://www.jivesoftware.com/schemas/clearspace/2_5/plugin.xsd">
+    <name>milton-dav</name>
+    <description>milton-dav</description>
+    <author>Syncapse</author>
+    <version>1.0.0</version>
+    <minServerVersion>4.5.4.0</minServerVersion>
+    <!-- you will want to change your class name here! -->
+
+    <urlmapping prefix="/webdav" class="com.syncapse.jive.milton.WebdavUrlMapper" />
+
+</plugin>

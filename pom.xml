@@ -9,9 +9,7 @@
 
   To change the Jive SBS version this customization project is attached to modify the clearspace.version 
   property at the bottom of the file.
--->
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+--><project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>com.syncapse.jive</groupId>
@@ -22,9 +20,8 @@
     <packaging>pom</packaging>
 
     <modules>
-        <module>webdav-servlet</module>
         <module>web</module>
-        <module>webdav-plugin</module>
+        <module>milton-dav</module>
     </modules>
 
     <build>
@@ -142,12 +139,13 @@
     <properties>
         <customer.name>jive-webdav</customer.name>
         <customer.version>1.0-SNAPSHOT</customer.version>
-        <sbs.shortversion>4.5.3</sbs.shortversion>
-        <sbs.version>4.5.3</sbs.version>
+        <sbs.shortversion>4.5.4.0</sbs.shortversion>
+        <sbs.version>4.5.4.0</sbs.version>
         <!-- This gets filtered into the setup param in your jive_init.xml Set to false if you want to enter setup screens-->
         <jive.setup>true</jive.setup>
         <cargo.wait>false</cargo.wait>
         <java.compiler>${java.home}/bin/javac</java.compiler>
+        <scala.version>2.8.1</scala.version>
     </properties>
 
     <organization>

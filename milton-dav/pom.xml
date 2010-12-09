@@ -1,0 +1,203 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  ~  $Revision: 96475 $
+  ~  $Date: 2009-11-02 16:51:02 -0800 (Mon, 02 Nov 2009) $
+  ~
+  ~  Copyright (C) 1999-${YEAR} Jive Software. All rights reserved.
+  ~
+  ~  This software is the proprietary information of Jive Software. Use is subject to license terms.
+  -->
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+    <!--
+	 These parameters were pased in via the commandline when this pom was created by the archetype.
+      -->
+    <modelVersion>4.0.0</modelVersion>
+    <groupId>com.syncapse</groupId>
+    <artifactId>milton-dav-plugin</artifactId>
+    <name>milton-dav</name>
+    <version>1.0</version>
+    <packaging>jar</packaging>
+    <url>http://www.jivesoftware.com</url>
+
+    <parent>
+        <groupId>com.syncapse.jive</groupId>
+        <artifactId>jive-webdav</artifactId>
+        <version>1.0-SNAPSHOT</version>
+        <relativePath>..</relativePath>
+    </parent>
+
+    <properties>
+        <milton.version>1.5.4</milton.version>
+    </properties>
+
+    <build>
+        <finalName>milton-dav-plugin-${sbs.version}-${version}</finalName>
+        <sourceDirectory>src/main/scala</sourceDirectory>
+        <testSourceDirectory>src/test/scala</testSourceDirectory>
+        <plugins>
+            <!-- For compilation-->
+            <plugin>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <configuration>
+                    <source>1.6</source>
+                    <target>1.6</target>
+                </configuration>
+            </plugin>
+            <!-- Weave transactions into the plugin -->
+            <plugin>
+                <artifactId>maven-assembly-plugin</artifactId>
+                <version>2.2-beta-5</version>
+                <executions>
+                    <execution>
+                        <id>assembly</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>single</goal>
+                        </goals>
+                        <configuration>
+                            <appendAssemblyId>false</appendAssemblyId>
+                            <descriptors>
+                                <descriptor>${basedir}/src/main/assembly/assembly-plugin.xml</descriptor>
+                            </descriptors>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+               <groupId>org.scala-tools</groupId>
+               <artifactId>maven-scala-plugin</artifactId>
+               <executions>
+                   <execution>
+                       <goals>
+                           <goal>compile</goal>
+                           <goal>testCompile</goal>
+                       </goals>
+                   </execution>
+               </executions>
+               <configuration>
+                   <scalaVersion>${scala.version}</scalaVersion>
+                   <args>
+                       <arg>-target:jvm-1.5</arg>
+                   </args>
+               </configuration>
+           </plugin>
+            <plugin>
+                <artifactId>maven-antrun-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <!-- Unpackages this SBS plugin.  That way it can be used in conjunction with the -DpluginDirs= property, which
+                             bypasses the standard plugin installation (which happens via the admin console), by pointing to exploded plugin jar created by this. -->
+                        <id>explode-sbs-plugin</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>run</goal>
+                        </goals>
+                        <configuration>
+                            <tasks>
+                                <mkdir dir="${basedir}/target/milton-dav-${sbs.version}-${version}"/>
+                                <unjar src="${basedir}/target/milton-dav-plugin-${sbs.version}-${version}.jar"
+                                       dest="${basedir}/target/milton-dav-${sbs.version}-${version}"/>
+                            </tasks>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-source-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>attach-sources</id>
+                        <phase>verify</phase>
+                        <goals>
+                            <goal>jar</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            <!-- For unit testing -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-eclipse-plugin</artifactId>
+                <configuration>
+                    <downloadSources>true</downloadSources>
+                    <buildcommands>
+                        <buildcommand>ch.epfl.lamp.sdt.core.scalabuilder</buildcommand>
+                    </buildcommands>
+                    <additionalProjectnatures>
+                        <projectnature>ch.epfl.lamp.sdt.core.scalanature</projectnature>
+                    </additionalProjectnatures>
+                    <classpathContainers>
+                        <classpathContainer>org.eclipse.jdt.launching.JRE_CONTAINER</classpathContainer>
+                        <classpathContainer>ch.epfl.lamp.sdt.launching.SCALA_CONTAINER</classpathContainer>
+                    </classpathContainers>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+    <dependencies>
+        <dependency>
+            <groupId>com.jivesoftware</groupId>
+            <artifactId>jive-sbs-employee</artifactId>
+            <version>${sbs.version}</version>
+            <type>jar</type>
+            <scope>provided</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>com.jivesoftware</groupId>
+            <artifactId>jive-sbs-employee-all</artifactId>
+            <version>${sbs.version}</version>
+            <type>pom</type>
+            <scope>provided</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>javax.servlet</groupId>
+            <artifactId>servlet-api</artifactId>
+            <version>2.3</version>
+            <type>jar</type>
+            <scope>provided</scope>
+        </dependency>
+        <!-- The following dependencies are for unit testing-->
+        <dependency>
+            <groupId>org.scala-lang</groupId>
+            <artifactId>scala-library</artifactId>
+            <version>${scala.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+            <version>4.4</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.scala-tools.testing</groupId>
+            <artifactId>specs_2.8.1</artifactId>
+            <version>1.6.6</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.ettrema</groupId>
+            <artifactId>milton-api</artifactId>
+            <version>${milton.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.ettrema</groupId>
+            <artifactId>milton-servlet</artifactId>
+            <version>${milton.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.ettrema</groupId>
+            <artifactId>milton-filesystem</artifactId>
+            <version>${milton.version}</version>
+        </dependency>
+    </dependencies>
+    <repositories>
+        <repository>
+            <id>milton</id>
+            <url>http://www.ettrema.com/maven2</url>
+        </repository>
+    </repositories>
+</project>
