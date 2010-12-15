@@ -65,23 +65,23 @@
                 </executions>
             </plugin>
             <plugin>
-               <groupId>org.scala-tools</groupId>
-               <artifactId>maven-scala-plugin</artifactId>
-               <executions>
-                   <execution>
-                       <goals>
-                           <goal>compile</goal>
-                           <goal>testCompile</goal>
-                       </goals>
-                   </execution>
-               </executions>
-               <configuration>
-                   <scalaVersion>${scala.version}</scalaVersion>
-                   <args>
-                       <arg>-target:jvm-1.5</arg>
-                   </args>
-               </configuration>
-           </plugin>
+                <groupId>org.scala-tools</groupId>
+                <artifactId>maven-scala-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>compile</goal>
+                            <goal>testCompile</goal>
+                        </goals>
+                    </execution>
+                </executions>
+                <configuration>
+                    <scalaVersion>${scala.version}</scalaVersion>
+                    <args>
+                        <arg>-target:jvm-1.5</arg>
+                    </args>
+                </configuration>
+            </plugin>
             <plugin>
                 <artifactId>maven-antrun-plugin</artifactId>
                 <executions>
@@ -193,6 +193,24 @@
             <artifactId>milton-filesystem</artifactId>
             <version>${milton.version}</version>
         </dependency>
+        <dependency>
+            <groupId>com.ettrema</groupId>
+            <artifactId>milton-console</artifactId>
+            <version>${milton.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.tomcat</groupId>
+            <artifactId>catalina</artifactId>
+            <version>6.0.20</version>
+            <type>jar</type>
+            <scope>compile</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.syncapse</groupId>
+            <artifactId>jive-scala</artifactId>
+            <version>1.0-SNAPSHOT</version>
+        </dependency>
+
     </dependencies>
     <repositories>
         <repository>

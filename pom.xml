@@ -22,7 +22,8 @@
     <modules>
         <module>web</module>
         <module>milton-dav</module>
-    </modules>
+    <module>webdav-test</module>
+  </modules>
 
     <build>
         <resources>

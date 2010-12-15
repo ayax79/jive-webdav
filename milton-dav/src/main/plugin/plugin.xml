@@ -7,6 +7,6 @@
     <minServerVersion>4.5.4.0</minServerVersion>
     <!-- you will want to change your class name here! -->
 
-    <urlmapping prefix="/webdav" class="com.syncapse.jive.milton.WebdavUrlMapper" />
+    <!--<urlmapping prefix="/webdav" class="com.syncapse.jive.milton.WebdavUrlMapper" />-->
 
 </plugin>

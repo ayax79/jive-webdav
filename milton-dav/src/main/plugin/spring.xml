@@ -7,6 +7,8 @@
         http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-2.5.xsd"
        default-autowire="no" default-init-method="init" default-destroy-method="destroy">
 
+    <bean class="com.syncapse.jive.milton.MiltonInitializer" />
+
     <bean id="webdavManager" class="com.syncapse.jive.milton.WebdavManagerImpl" />
 
 </beans>
