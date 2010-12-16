@@ -3,12 +3,13 @@ package com.syncapse.jive.milton
 import com.jivesoftware.community.lifecycle.{ApplicationState, ApplicationStateChangeEvent}
 import com.syncapse.jive.servlet.{AppServerUtils, ServletContextComponent}
 import com.syncapse.jive.event.ApplicationStateChangeListener
+import org.springframework.aop.SpringProxy
 
 object MiltonInitializer {
   protected[milton] var webdavManager: WebdavManager = null
 }
 
-class MiltonInitializer extends ApplicationStateChangeListener with ServletContextComponent with WebdavManagerComponent {
+class MiltonInitializer extends ApplicationStateChangeListener with SpringProxy with ServletContextComponent with WebdavManagerComponent {
 
   def handle(e: ApplicationStateChangeEvent) = e.getNewState match {
     case ApplicationState.RUNNING => initialize

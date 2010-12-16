@@ -6,42 +6,45 @@
         http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-2.5.xsd"
        default-autowire="no" default-init-method="init" default-destroy-method="destroy">
 
-    <bean id="webdavManager" class="com.syncapse.jive.milton.WebdavManagerImpl"/>
-    <bean id="miltonFilter" class="com.syncapse.jive.milton.MiltonFilter" p:webdavManager-ref="webdavManager"/>
+    <bean id="webdavManager" class="com.syncapse.jive.milton.WebdavManagerImpl" />
+    <bean class="com.syncapse.jive.milton.MiltonInitializer" />
 
-    <bean id="filterChainProxy" class="org.acegisecurity.util.FilterChainProxy">
-        <property name="filterInvocationDefinitionSource">
-            <value>
-                CONVERT_URL_TO_LOWERCASE_BEFORE_COMPARISON
-                PATTERN_TYPE_APACHE_ANT
-                /upgrade/**=pluginPreFilterChain, httpSessionContextIntegrationFilter, pluginPostSessionContextFilterChain, upgradeAuthenticationFilter, upgradeExceptionTranslationFilter,jiveAuthenticationTranslationFilter, pluginPostFilterChain
-                /post-upgrade/**=pluginPreFilterChain, httpSessionContextIntegrationFilter, pluginPostSessionContextFilterChain, postUpgradeAuthenticationFilter, postUpgradeExceptionTranslationFilter,jiveAuthenticationTranslationFilter, pluginPostFilterChain
-                /admin/**=pluginPreFilterChain, httpSessionContextIntegrationFilter, pluginPostSessionContextFilterChain, sessionTrackingFilter, adminAuthenticationFilter, adminExceptionTranslationFilter,jiveAuthenticationTranslationFilter, pluginPostFilterChain
-                /dwr/call/plaincall/passwordstrength**=pluginPreFilterChain, httpSessionContextIntegrationFilter, pluginPostSessionContextFilterChain, jiveAuthenticationTranslationFilter, pluginPostFilterChain
-                /dwr/**=pluginPreFilterChain, httpSessionContextIntegrationFilter, pluginPostSessionContextFilterChain, jiveAuthenticationTranslationFilter, denyGuestAccessFilter, pluginPostFilterChain
-                /webdav/**=miltonFilter
-                /rpc/bridging/**=blockServices
-                /rpc/mobile/**=blockServices
-                /rpc/api/**=blockServices
-                /rpc/openclient/**=blockServices
-                /rpc/xmlrpc=pluginPreFilterChain, wsRequireSSLFilter, httpSessionContextIntegrationFilter, pluginPostSessionContextFilterChain, basicAuthenticationFilter, wsExceptionTranslator, jiveAuthenticationTranslationFilter, wsAccessTypeCheckFilter, pluginPostFilterChain
-                /rpc/rest/**=pluginPreFilterChain, wsRequireSSLFilter, httpSessionContextIntegrationFilter, pluginPostSessionContextFilterChain, basicAuthenticationFilter, wsExceptionTranslator, jiveAuthenticationTranslationFilter, wsAccessTypeCheckFilter, pluginPostFilterChain
-                /rpc/soap/**=pluginPreFilterChain, wsRequireSSLFilter, httpSessionContextIntegrationFilter, pluginPostSessionContextFilterChain, jiveAuthenticationTranslationFilter, pluginPostFilterChain
-                /__services/xmlrpc=blockServices
-                /__services/rest/**=blockServices
-                /__services/soap/**=blockServices
-                /__services/api/**=blockServices
-                /__services/openclient/**=blockServices
-                /__services/office/**=pluginPreFilterChain, dvRequireSSLFilter, httpSessionContextIntegrationFilter, pluginPostSessionContextFilterChain, jiveAuthenticationTranslationFilter, pluginPostFilterChain
-                /__services/bridging/**=pluginPreFilterChain, bridgeRequireSSLFilter, httpSessionContextIntegrationFilter, pluginPostSessionContextFilterChain, basicAuthenticationFilter, restExceptionTranslator, jiveAuthenticationTranslationFilter, wsBridgingAccessCheckFilter, pluginPostFilterChain
-                /__services/mobile/**=pluginPreFilterChain, mobileRequireSSLFilter, httpSessionContextIntegrationFilter, pluginPostSessionContextFilterChain, mobileBasicAuthenticationFilter, wsExceptionTranslator, mobileRememberMeProcessingFilter, jiveAuthenticationTranslationFilter, wsIphoneAccessCheckFilter, pluginPostFilterChain
-                /__services/v2/rest/**=pluginPreFilterChain, httpSessionContextIntegrationFilter, pluginPostSessionContextFilterChain, restExceptionTranslator, jiveAuthenticationTranslationFilter, pluginPostFilterChain
-                /__services/**=pluginPreFilterChain, httpSessionContextIntegrationFilter, pluginPostSessionContextFilterChain, basicAuthenticationFilter, wsExceptionTranslator, jiveAuthenticationTranslationFilter, pluginPostFilterChain
-                /api/openclient/**=pluginPreFilterChain, openClientRequireSSLFilter, httpSessionContextIntegrationFilter, pluginPostSessionContextFilterChain, basicAuthenticationFilter, openClientExceptionTranslator, jiveAuthenticationTranslationFilter, openClientAccessTypeCheckFilter, pluginPostFilterChain
-                /api/**=pluginPreFilterChain, httpSessionContextIntegrationFilter, pluginPostSessionContextFilterChain, basicAuthenticationFilter, wsExceptionTranslator, jiveAuthenticationTranslationFilter, pluginPostFilterChain
-                /**=pluginPreFilterChain, httpSessionContextIntegrationFilter, pluginPostSessionContextFilterChain, sessionTrackingFilter, formAuthenticationFilter, loginPopupFormAuthenticationFilter, rememberMeProcessingFilter, feedBasicAuthenticationFilter, exceptionTranslationFilter, jiveAuthenticationTranslationFilter,contextOptimizationFilter, termsAndConditionsAcceptanceFilter, pluginPostFilterChain
-            </value>
-        </property>
-    </bean>
+
+    <!--<bean id="miltonFilter" class="com.syncapse.jive.milton.MiltonFilter" p:webdavManager-ref="webdavManager"/>-->
+
+    <!--<bean id="filterChainProxy" class="org.acegisecurity.util.FilterChainProxy">-->
+        <!--<property name="filterInvocationDefinitionSource">-->
+            <!--<value>-->
+                <!--CONVERT_URL_TO_LOWERCASE_BEFORE_COMPARISON-->
+                <!--PATTERN_TYPE_APACHE_ANT-->
+                <!--/upgrade/**=pluginPreFilterChain, httpSessionContextIntegrationFilter, pluginPostSessionContextFilterChain, upgradeAuthenticationFilter, upgradeExceptionTranslationFilter,jiveAuthenticationTranslationFilter, pluginPostFilterChain-->
+                <!--/post-upgrade/**=pluginPreFilterChain, httpSessionContextIntegrationFilter, pluginPostSessionContextFilterChain, postUpgradeAuthenticationFilter, postUpgradeExceptionTranslationFilter,jiveAuthenticationTranslationFilter, pluginPostFilterChain-->
+                <!--/admin/**=pluginPreFilterChain, httpSessionContextIntegrationFilter, pluginPostSessionContextFilterChain, sessionTrackingFilter, adminAuthenticationFilter, adminExceptionTranslationFilter,jiveAuthenticationTranslationFilter, pluginPostFilterChain-->
+                <!--/dwr/call/plaincall/passwordstrength**=pluginPreFilterChain, httpSessionContextIntegrationFilter, pluginPostSessionContextFilterChain, jiveAuthenticationTranslationFilter, pluginPostFilterChain-->
+                <!--/dwr/**=pluginPreFilterChain, httpSessionContextIntegrationFilter, pluginPostSessionContextFilterChain, jiveAuthenticationTranslationFilter, denyGuestAccessFilter, pluginPostFilterChain-->
+                <!--/webdav/**=miltonFilter-->
+                <!--/rpc/bridging/**=blockServices-->
+                <!--/rpc/mobile/**=blockServices-->
+                <!--/rpc/api/**=blockServices-->
+                <!--/rpc/openclient/**=blockServices-->
+                <!--/rpc/xmlrpc=pluginPreFilterChain, wsRequireSSLFilter, httpSessionContextIntegrationFilter, pluginPostSessionContextFilterChain, basicAuthenticationFilter, wsExceptionTranslator, jiveAuthenticationTranslationFilter, wsAccessTypeCheckFilter, pluginPostFilterChain-->
+                <!--/rpc/rest/**=pluginPreFilterChain, wsRequireSSLFilter, httpSessionContextIntegrationFilter, pluginPostSessionContextFilterChain, basicAuthenticationFilter, wsExceptionTranslator, jiveAuthenticationTranslationFilter, wsAccessTypeCheckFilter, pluginPostFilterChain-->
+                <!--/rpc/soap/**=pluginPreFilterChain, wsRequireSSLFilter, httpSessionContextIntegrationFilter, pluginPostSessionContextFilterChain, jiveAuthenticationTranslationFilter, pluginPostFilterChain-->
+                <!--/__services/xmlrpc=blockServices-->
+                <!--/__services/rest/**=blockServices-->
+                <!--/__services/soap/**=blockServices-->
+                <!--/__services/api/**=blockServices-->
+                <!--/__services/openclient/**=blockServices-->
+                <!--/__services/office/**=pluginPreFilterChain, dvRequireSSLFilter, httpSessionContextIntegrationFilter, pluginPostSessionContextFilterChain, jiveAuthenticationTranslationFilter, pluginPostFilterChain-->
+                <!--/__services/bridging/**=pluginPreFilterChain, bridgeRequireSSLFilter, httpSessionContextIntegrationFilter, pluginPostSessionContextFilterChain, basicAuthenticationFilter, restExceptionTranslator, jiveAuthenticationTranslationFilter, wsBridgingAccessCheckFilter, pluginPostFilterChain-->
+                <!--/__services/mobile/**=pluginPreFilterChain, mobileRequireSSLFilter, httpSessionContextIntegrationFilter, pluginPostSessionContextFilterChain, mobileBasicAuthenticationFilter, wsExceptionTranslator, mobileRememberMeProcessingFilter, jiveAuthenticationTranslationFilter, wsIphoneAccessCheckFilter, pluginPostFilterChain-->
+                <!--/__services/v2/rest/**=pluginPreFilterChain, httpSessionContextIntegrationFilter, pluginPostSessionContextFilterChain, restExceptionTranslator, jiveAuthenticationTranslationFilter, pluginPostFilterChain-->
+                <!--/__services/**=pluginPreFilterChain, httpSessionContextIntegrationFilter, pluginPostSessionContextFilterChain, basicAuthenticationFilter, wsExceptionTranslator, jiveAuthenticationTranslationFilter, pluginPostFilterChain-->
+                <!--/api/openclient/**=pluginPreFilterChain, openClientRequireSSLFilter, httpSessionContextIntegrationFilter, pluginPostSessionContextFilterChain, basicAuthenticationFilter, openClientExceptionTranslator, jiveAuthenticationTranslationFilter, openClientAccessTypeCheckFilter, pluginPostFilterChain-->
+                <!--/api/**=pluginPreFilterChain, httpSessionContextIntegrationFilter, pluginPostSessionContextFilterChain, basicAuthenticationFilter, wsExceptionTranslator, jiveAuthenticationTranslationFilter, pluginPostFilterChain-->
+                <!--/**=pluginPreFilterChain, httpSessionContextIntegrationFilter, pluginPostSessionContextFilterChain, sessionTrackingFilter, formAuthenticationFilter, loginPopupFormAuthenticationFilter, rememberMeProcessingFilter, feedBasicAuthenticationFilter, exceptionTranslationFilter, jiveAuthenticationTranslationFilter,contextOptimizationFilter, termsAndConditionsAcceptanceFilter, pluginPostFilterChain-->
+            <!--</value>-->
+        <!--</property>-->
+    <!--</bean>-->
 
 </beans>
