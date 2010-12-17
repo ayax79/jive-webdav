@@ -19,10 +19,14 @@ class JiveMiltonSecurityManager(val authenticationManager: AuthenticationManager
   def authenticate(user: String, password: String) = {
     var authenticated = true
     try {
-      authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(user, password))
+      val token: UsernamePasswordAuthenticationToken = new UsernamePasswordAuthenticationToken(user, password)
+      token.setDetails(user)
+      authenticationManager.authenticate(token)
     }
     catch {
-      case a: AuthenticationException => authenticated = false
+      case a: AuthenticationException =>
+        logger.debug("Auth failed for: " + user)
+        authenticated = false
 
     }
     authenticated.asInstanceOf[AnyRef]

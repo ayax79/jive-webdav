@@ -24,8 +24,8 @@ class WebdavManagerImpl(val securityManager: SecurityManager) extends WebdavMana
 
   protected val lockManager = new FsMemoryLockManager
   protected val authService = new AuthenticationService
-  authService.setDisableBasic(true)
-  authService.setDisableDigest(false)
+  authService.setDisableBasic(false)
+  authService.setDisableDigest(true)
   protected val webDavHandler = new DefaultWebDavResponseHandler(authService)
   protected val compressingResponseHandler = new CompressingResponseHandler(webDavHandler)
 
