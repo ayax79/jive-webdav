@@ -6,8 +6,16 @@
        http://www.springframework.org/schema/security http://www.springframework.org/schema/security/spring-security-2.0.2.xsd"
        default-autowire="no" default-init-method="init" default-destroy-method="destroy">
 
-    <bean id="webdavManager" class="com.syncapse.jive.milton.WebdavManagerImpl"/>
-    <bean id="miltonFilter" class="com.syncapse.jive.milton.MiltonFilter" p:webdavManager-ref="webdavManager"/>
+    <bean id="miltonSecurityManager" class="com.syncapse.jive.milton.JiveMiltonSecurityManager">
+        <constructor-arg ref="authenticationManager" />
+    </bean>
+
+    <bean id="webdavManager" class="com.syncapse.jive.milton.WebdavManagerImpl">
+        <constructor-arg ref="miltonSecurityManager"/>
+    </bean>
+    <bean id="miltonFilter" class="com.syncapse.jive.milton.MiltonFilter" >
+        <constructor-arg ref="webdavManager"/>
+    </bean>
 
     <bean id="pluginPreFilterChain" class="org.springframework.security.util.FilterChainProxy">
         <security:filter-chain-map path-type="ant">

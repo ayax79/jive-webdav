@@ -20,31 +20,28 @@ trait WebdavManagerComponent {
   }
 }
 
-class WebdavManagerImpl extends WebdavManager {
+class WebdavManagerImpl(val securityManager: SecurityManager) extends WebdavManager {
 
-  private val lockManager = new FsMemoryLockManager
+  protected val lockManager = new FsMemoryLockManager
+  protected val authService = new AuthenticationService
+  authService.setDisableBasic(true)
+  authService.setDisableDigest(false)
+  protected val webDavHandler = new DefaultWebDavResponseHandler(authService)
+  protected val compressingResponseHandler = new CompressingResponseHandler(webDavHandler)
 
-  // todo - there are a lot of things hardcoded in here that will need to be cleaned up.
-
-  private val securityManager = new SimpleSecurityManager("jive", JavaConversions.asJavaMap(Map("admin" -> "admin")))
-  private val fileResourceFactory = new FileSystemResourceFactory
+  // initialized in init do to dependencies on injected resources
+  protected var fileResourceFactory = new FileSystemResourceFactory
   fileResourceFactory.setSecurityManager(securityManager)
   fileResourceFactory.setLockManager(lockManager)
   fileResourceFactory.setMaxAgeSeconds(3600)
   fileResourceFactory.setContextPath("jive/webdav")
 
-  private val consoleResourceFactory = new ConsoleResourceFactory(fileResourceFactory, "/jive/webdav/console", "/jive/webdav",
+  protected var consoleResourceFactory = new ConsoleResourceFactory(fileResourceFactory, "/jive/webdav/console", "/jive/webdav",
     JavaConversions.asJavaList(List(new LsFactory, new CdFactory, new RmFactory, new HelpFactory, new CpFactory, new MkFactory, new MkdirFactory)),
     "jive/webdav");
 
-  private val authService = new AuthenticationService
-  authService.setDisableBasic(false)
-  authService.setDisableDigest(true)
+  protected var mgr = new HttpManager(fileResourceFactory, compressingResponseHandler, authService)
 
-  private val webDavHandler = new DefaultWebDavResponseHandler(authService)
-  private val compressingResponseHandler = new CompressingResponseHandler(webDavHandler)
-
-  private val mgr = new HttpManager(fileResourceFactory, compressingResponseHandler, authService)
 
   override def process(req: Request, resp: Response) = mgr.process(req, resp)
 }
