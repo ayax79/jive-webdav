@@ -2,7 +2,5 @@
 <struts>
     <package name="milton-dav-actions" extends="community-custom">
 
-        <action name="milton" class="com.syncapse.jive.milton.MiltonAction" />
-
     </package>
 </struts>
