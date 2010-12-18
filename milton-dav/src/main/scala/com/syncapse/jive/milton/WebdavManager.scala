@@ -1,46 +1,46 @@
 package com.syncapse.jive.milton
 
-import org.springframework.beans.factory.annotation.Required
 import com.bradmcevoy.http.webdav.DefaultWebDavResponseHandler
 import com.bradmcevoy.http._
 import com.ettrema.console._
-import collection.JavaConversions
-import com.ettrema.http.fs.{SimpleSecurityManager, FsMemoryLockManager, FileSystemResourceFactory}
+import collection.JavaConversions._
+import com.ettrema.http.fs.FsMemoryLockManager
+import com.jivesoftware.community.JiveContext
+import org.springframework.context.{ApplicationContext, ApplicationContextAware}
 
 trait WebdavManager {
   def process(req: Request, resp: Response)
 }
 
-trait WebdavManagerComponent {
-  protected[milton] var webdavManger: WebdavManager = null
+class WebdavManagerImpl(sm: SecurityManager) extends WebdavManager with ApplicationContextAware {
 
-  @Required
-  def setWebdavManager(wd: WebdavManager) = {
-    webdavManger = wd
+  protected var jc: JiveContext = _
+
+  def setApplicationContext(p1: ApplicationContext) = {
+    jc = p1.asInstanceOf[JiveContext]
   }
-}
 
-class WebdavManagerImpl(val securityManager: SecurityManager) extends WebdavManager {
+  protected var mgr: HttpManager = _
 
-  protected val lockManager = new FsMemoryLockManager
-  protected val authService = new AuthenticationService
-  authService.setDisableBasic(false)
-  authService.setDisableDigest(true)
-  protected val webDavHandler = new DefaultWebDavResponseHandler(authService)
-  protected val compressingResponseHandler = new CompressingResponseHandler(webDavHandler)
+  protected def init = {
+    val lockManager = new FsMemoryLockManager
+    val authService = new AuthenticationService
+    authService.setDisableBasic(false)
+    authService.setDisableDigest(true)
 
-  // initialized in init do to dependencies on injected resources
-  protected var fileResourceFactory = new FileSystemResourceFactory
-  fileResourceFactory.setSecurityManager(securityManager)
-  fileResourceFactory.setLockManager(lockManager)
-  fileResourceFactory.setMaxAgeSeconds(3600)
-  fileResourceFactory.setContextPath("jive/webdav")
+    val webDavHandler = new DefaultWebDavResponseHandler(authService)
+    val compressingResponseHandler = new CompressingResponseHandler(webDavHandler)
+    val resourceFactory: JiveResourceFactory = new JiveResourceFactory(jc, sm)
+    resourceFactory.contextPath = "jive/webdav"
 
-  protected var consoleResourceFactory = new ConsoleResourceFactory(fileResourceFactory, "/jive/webdav/console", "/jive/webdav",
-    JavaConversions.asJavaList(List(new LsFactory, new CdFactory, new RmFactory, new HelpFactory, new CpFactory, new MkFactory, new MkdirFactory)),
-    "jive/webdav");
+    val factories = asJavaList(List(new LsFactory, new CdFactory, new RmFactory, new HelpFactory,
+      new CpFactory, new MkFactory, new MkdirFactory))
 
-  protected var mgr = new HttpManager(fileResourceFactory, compressingResponseHandler, authService)
+    val consoleResourceFactory = new ConsoleResourceFactory(resourceFactory, "/jive/webdav/console", "/jive/webdav",
+      factories, "jive/webdav");
+
+    mgr = new HttpManager(resourceFactory, compressingResponseHandler, authService)
+  }
 
 
   override def process(req: Request, resp: Response) = mgr.process(req, resp)

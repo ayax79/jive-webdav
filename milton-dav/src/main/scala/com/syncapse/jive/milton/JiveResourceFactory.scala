@@ -4,7 +4,6 @@ import java.lang.String
 import reflect.BeanProperty
 import com.syncapse.jive.Loggable
 import resource.{DocumentResource, CommunityResource}
-import scala.collection.JavaConversions
 import com.jivesoftware.community._
 import com.syncapse.jive.auth.JiveAuthenticationProvidable
 import com.bradmcevoy.http.{SecurityManager, ResourceFactory}
@@ -14,10 +13,17 @@ class JiveResourceFactory(jc: JiveContext, sm: SecurityManager) extends Resource
   @BeanProperty var contextPath: String = _
 
   def getResource(host: String, path: String) = {
-    findObjectFromUriTokens(tokens(stripContext(host)), rootCommunity) match {
-      case c: Community => new CommunityResource(c, jc, sm)
-      case d: Document => new DocumentResource(d, jc.getDocumentManager, sm)
-      case _ => throw new IllegalArgumentException("resource already exists")
+    val url: String = stripContext(path)
+    url match {
+      case "" => new CommunityResource(rootCommunity, jc, sm)
+      case _ => findObjectFromUriTokens(tokens(url), rootCommunity) match {
+        case Some(jo) => jo match {
+          case c: Community => new CommunityResource(c, jc, sm)
+          case d: Document => new DocumentResource(d, jc.getDocumentManager, sm)
+          case _ => throw new IllegalArgumentException("could not determine resource")
+        }
+        case None => null
+      }
     }
   }
 
@@ -26,6 +32,9 @@ class JiveResourceFactory(jc: JiveContext, sm: SecurityManager) extends Resource
     if (this.contextPath != null && contextPath.length() > 0) {
       url2 = url.replaceFirst('/' + contextPath, "");
       logger.debug("stripped context: " + url);
+    }
+    if (url2 == "/") {
+      url2 = ""
     }
     url2
   }
