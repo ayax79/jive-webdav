@@ -8,7 +8,9 @@ import org.apache.commons.io.IOUtils
 import java.io.{InputStream, OutputStream}
 import com.syncapse.jive.Loggable
 
-class DocumentResource(document: Document, dm: DocumentManager, sm: SecurityManager)
+class DocumentResource(val document: Document,
+                       private val dm: DocumentManager,
+                       private val sm: SecurityManager)
         extends BaseResource(sm)
         with DeletableResource
         with MoveableResource
@@ -43,7 +45,7 @@ class DocumentResource(document: Document, dm: DocumentManager, sm: SecurityMana
   }
 
   def moveTo(rDest: CollectionResource, name: String) = rDest match {
-    case cr: CommunityResource => dm.moveDocument(document, cr.getCommunity)
+    case cr: CommunityResource => dm.moveDocument(document, cr.community)
     case _ => logger.warn("Do not know how to move resource to " + name)
   }
 

@@ -45,7 +45,9 @@ class JiveMiltonSecurityManager(val authenticationManager: AuthenticationManager
     //logger.debug("server resp: " + serverResponse);
     //logger.debug("given response: " + clientResponse);
 
-    false.asInstanceOf[AnyRef]
+    // false.asInstanceOf[AnyRef]
+
+    digestRequest.getUser
   }
 
 }

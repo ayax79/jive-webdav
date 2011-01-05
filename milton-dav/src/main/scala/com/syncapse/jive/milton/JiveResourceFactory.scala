@@ -1,16 +1,16 @@
 package com.syncapse.jive.milton
 
 import java.lang.String
-import reflect.BeanProperty
 import com.syncapse.jive.Loggable
 import resource.{DocumentResource, CommunityResource}
 import com.jivesoftware.community._
 import com.syncapse.jive.auth.JiveAuthenticationProvidable
 import com.bradmcevoy.http.{SecurityManager, ResourceFactory}
 
-class JiveResourceFactory(jc: JiveContext, sm: SecurityManager) extends ResourceFactory with Loggable with JiveAuthenticationProvidable {
-
-  @BeanProperty var contextPath: String = _
+class JiveResourceFactory(private val jc: JiveContext,
+                          private val sm: SecurityManager,
+                          val contextPath: String)
+        extends ResourceFactory with Loggable with JiveAuthenticationProvidable {
 
   def getResource(host: String, path: String) = {
     val url: String = stripContext(path)

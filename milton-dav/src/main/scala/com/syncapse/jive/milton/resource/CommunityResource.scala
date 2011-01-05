@@ -9,8 +9,13 @@ import java.util.{Map => JMap}
 import com.bradmcevoy.http._
 import java.io.{OutputStream, InputStream}
 
-class CommunityResource(community: Community, jc: JiveContext, sm: SecurityManager)
-        extends BaseResource(sm) with PutableResource with JiveAuthenticationProvidable {
+class CommunityResource(val community: Community,
+                        private val jc: JiveContext,
+                        private val sm: SecurityManager)
+        extends BaseResource(sm)
+        with PutableResource
+        with PropFindableResource
+        with JiveAuthenticationProvidable {
 
   def getModifiedDate = community.getModificationDate
 
@@ -19,8 +24,6 @@ class CommunityResource(community: Community, jc: JiveContext, sm: SecurityManag
   def getUniqueId = community.getDisplayName
 
   def getChildren = asJavaList(childCommunities.map(asResource) ++ childDocuments.map(asResource))
-
-  def getCommunity = community
 
   def child(childName: String) = communityChild(childName) match {
     case c: Community => asResource(c)
@@ -77,6 +80,8 @@ class CommunityResource(community: Community, jc: JiveContext, sm: SecurityManag
 
 
   def getContentType(accepts: String) = "text/html"
+
+  def getCreateDate = community.getCreationDate
 
   protected def communityChild[T <: JiveObject](displayName: String): Option[T] = {
 

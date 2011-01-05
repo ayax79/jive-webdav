@@ -4,9 +4,9 @@ import com.bradmcevoy.http.webdav.DefaultWebDavResponseHandler
 import com.bradmcevoy.http._
 import com.ettrema.console._
 import collection.JavaConversions._
-import com.ettrema.http.fs.FsMemoryLockManager
 import com.jivesoftware.community.JiveContext
 import org.springframework.context.{ApplicationContext, ApplicationContextAware}
+import com.ettrema.http.fs.FsMemoryLockManager
 
 trait WebdavManager {
   def process(req: Request, resp: Response)
@@ -30,8 +30,7 @@ class WebdavManagerImpl(sm: SecurityManager) extends WebdavManager with Applicat
 
     val webDavHandler = new DefaultWebDavResponseHandler(authService)
     val compressingResponseHandler = new CompressingResponseHandler(webDavHandler)
-    val resourceFactory: JiveResourceFactory = new JiveResourceFactory(jc, sm)
-    resourceFactory.contextPath = "jive/webdav"
+    val resourceFactory = new JiveResourceFactory(jc, sm, "jive/webdav")
 
     val factories = asJavaList(List(new LsFactory, new CdFactory, new RmFactory, new HelpFactory,
       new CpFactory, new MkFactory, new MkdirFactory))
