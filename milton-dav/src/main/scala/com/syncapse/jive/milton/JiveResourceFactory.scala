@@ -10,34 +10,29 @@ import com.bradmcevoy.http.{SecurityManager, ResourceFactory}
 class JiveResourceFactory(private val jc: JiveContext,
                           private val sm: SecurityManager,
                           val contextPath: String)
-        extends ResourceFactory with Loggable with JiveAuthenticationProvidable {
+  extends ResourceFactory with Loggable with JiveAuthenticationProvidable {
 
-  def getResource(host: String, path: String) = {
-    val url: String = stripContext(path)
-    url match {
-      case "" => new CommunityResource(rootCommunity, jc, sm)
-      case _ => findObjectFromUriTokens(tokens(url), rootCommunity) match {
-        case Some(jo) => jo match {
-          case c: Community => new CommunityResource(c, jc, sm)
-          case d: Document => new DocumentResource(d, jc.getDocumentManager, sm)
-          case _ => throw new IllegalArgumentException("could not determine resource")
-        }
-        case None => null
-      }
+  def getResource(host: String, path: String) =  stripContext(path) match {
+    case "" => new CommunityResource(rootCommunity, jc, sm)
+    case url => findObjectFromUriTokens(tokens(url), rootCommunity) match {
+      case Some(c: Community) => new CommunityResource(c, jc, sm)
+      case Some(d: Document) => new DocumentResource(d, jc.getDocumentManager, sm)
+      case Some(_) => throw new IllegalArgumentException("could not determine resource")
+      case None => null
     }
   }
 
-  protected def stripContext(url: String): String = {
-    var url2 = url
-    if (this.contextPath != null && contextPath.length() > 0) {
-      url2 = url.replaceFirst('/' + contextPath, "");
-      logger.debug("stripped context: " + url);
+  protected def tokens(uri: String) =
+    uri.split("/").toList.filter {
+      case "" => false;
+      case _ => true
     }
-    if (url2 == "/") {
-      url2 = ""
-    }
-    url2
-  }
+
+  protected def stripContext(url: String): String =
+    if (contextPath != null && contextPath.length() > 0) url.replaceFirst('/' + contextPath, "");
+    else if (url == "/") ""
+    else url
+
 
   protected def rootCommunity = jc.getCommunityManager.getRootCommunity
 
@@ -59,78 +54,24 @@ class JiveResourceFactory(private val jc: JiveContext,
    * @param tokens Tokens matching the uri
    * @param tokens The jive object at the current context.
    */
-  protected[milton] def findObjectFromUriTokens(tokens: List[String], j: JiveObject): Option[JiveObject] = {
-
-    def documentFromCommunity(s: String, c: Community): Option[Document] = {
-      logger.info("documentFromCommunity s: " + s + " c: " + c)
-      childDocuments(c).find{
-        d => d.getBinaryBody.getName == s
-      } match {
-        case None => None
-        case Some(d) => Some(d)
+  protected[milton] def findObjectFromUriTokens(tokens: List[String], j: Document): Option[JiveObject] = {Some(j)}
+  protected[milton] def findObjectFromUriTokens(tokens: List[String], c: Community): Option[JiveObject] = tokens match {
+    case Nil => None // couldn't find a match
+    case "" :: Nil => None // handle the odd case where there may be no entry
+    case "" :: tail => findObjectFromUriTokens(tail, c) // handle the odd case where there may be no entry
+    case head :: tail =>
+      childCommunities(c).find(c => c.getName == head) match {
+        case s@Some(cc) if tail == Nil => s // return the community we are out of tokens.
+        case Some(cc) => findObjectFromUriTokens(tail, cc)
+        case None =>
+        // see if it a document instead
+          childDocuments(c).find(d => d.getBinaryBody.getName == head) match {
+            case None => None
+            case Some(d) => findObjectFromUriTokens(tail, d)
+          }
       }
-    }
-
-    def matchingCommunity(c: Community, name: String): Option[Community] = {
-      logger.info("matchingCommunity c: " + c.getName + " name: " + name)
-      // todo, caching or something more efficient here
-      childCommunities(c).find(c => c.getName == name) match {
-        case Some(x) => Some(x)
-        case None => None
-      }
-    }
-
-    j match {
-    // go until we find a document, even if there are more tokens (we will ignore them)
-      case d: Document => Some(d)
-      case c: Community =>
-        tokens match {
-          case Nil => None // couldn't find a match
-          case head :: tail =>
-            head match {
-            // handle the odd case where there may be no entry
-              case "" =>
-                tail match {
-                  case Nil => None
-                  case _ => findObjectFromUriTokens(tail, j)
-                }
-              case _ =>
-                matchingCommunity(c, head) match {
-                  case None =>
-                  // see if it a document instead
-                    documentFromCommunity(head, c) match {
-                      case None => None
-                      case Some(d) => findObjectFromUriTokens(tail, d)
-                    }
-                  case Some(c) =>
-                    tail match {
-                      case Nil => Some(c) // return the community we are out of tokens.
-                      case _ => findObjectFromUriTokens(tail, c)
-                    }
-                }
-            }
-
-        }
-    }
   }
 
-  protected def printList(list: Array[String]): String = list match {
-    case null => null
-    case _ => printList(list.toList)
-  }
-
-  protected def printList(list: List[String]): String = list match {
-    case Nil => ""
-    case _ => "[" + list.reduceLeft(_ + ", " + _) + "]"
-  }
-
-  protected def tokens(uri: String) = {
-    val list: List[String] = uri.split("/").toList
-    list.filter{
-      case "" => false;
-      case _ => true
-    }
-  }
 
   protected val childCommunities = WebdavUtil.childCommunities(_: Community, jc.getCommunityManager)
   protected val childDocuments = WebdavUtil.childDocuments(_: Community, jc.getDocumentManager)
