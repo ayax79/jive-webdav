@@ -8,6 +8,7 @@ import com.syncapse.jive.milton.WebdavUtil
 import java.util.{Map => JMap}
 import com.bradmcevoy.http._
 import java.io.{OutputStream, InputStream}
+import scala.xml.{Node, Text, Atom, Elem, Group}
 
 class CommunityResource(val community: Community,
                         private val jc: JiveContext,
@@ -55,27 +56,21 @@ class CommunityResource(val community: Community,
 
 
   def sendContent(out: OutputStream, range: Range, params: JMap[String, String], contentType: String) = {
+    val xml =
+      <html>
+        <body>
+          <h1>{this.getName}</h1>
+          <table>
+          {
+            for {c <- getChildren}
+            yield <tr><td>{c.getName}</td></tr>
+          }
+          </table>
+        </body>
+      </html>
 
-    val w = new XmlWriter(out)
-    w.open("html")
-    w.open("body")
-    w.begin("h1").open().writeText(this.getName).close
-    w.open("table")
-    asScalaIterable(getChildren).foreach{
-      r =>
-        w.open("tr")
-
-        w.open("td")
-        w.writeText(r.getName)
-        w.close("td")
-
-        w.begin("td").open().writeText(r.getModifiedDate() + "").close
-        w.close("tr")
-    }
-    w.close("table")
-    w.close("body")
-    w.close("html")
-    w.flush
+    out.write(xml.toString.getBytes)
+    out.flush
   }
 
 
@@ -83,23 +78,12 @@ class CommunityResource(val community: Community,
 
   def getCreateDate = community.getCreationDate
 
-  protected def communityChild[T <: JiveObject](displayName: String): Option[T] = {
-
-    def communityChildByDisplayName(displayName: String): Option[Community] =
-      childCommunities.find{
-        c1 => c1.getName == displayName
-      }
-
-    def documentChildByFileName(fileName: String): Option[Document] =
-      childDocuments.find{
-        d1 => d1.getBinaryBody.getName == fileName
-      }
-
-    communityChildByDisplayName(displayName) match {
-      case Some(c) => Some(c.asInstanceOf[T])
-      case None => documentChildByFileName(displayName) match {
-        case Some(d) => Some(d.asInstanceOf[T])
-        case None => None
+  protected def communityChild[T <: JiveObject](displayName: String): Option[JiveObject] = {
+    childCommunities.find{c1 => c1.getName == displayName} match {
+      case s@Some(c) => s
+      case   None => childDocuments.find{d1 => d1.getBinaryBody.getName == displayName} match {
+        case s@Some(d) => s
+        case   None => None
       }
     }
   }
